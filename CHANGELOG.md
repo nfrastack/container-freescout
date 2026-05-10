@@ -1,3 +1,14 @@
+## 1.17.999 2026-05-09 <dave at tiredofit dot ca>
+
+This is the final tiredofit/freescout image and all future images will come from the nfrastack/freescout namespace
+Please read the README.md inside the root of the container and the EOL notice when starting image to see how you can continue to use this image with new FreeScout releases
+See you in the new namespace
+
+   ### Added
+      - Add FREESCOUT_VERSION capability to upgrade to newer versions after this image is EOL
+      - Allow upgrading within the Admin panel if user is exposing /www/html as a volume
+
+
 ## 1.17.159 2026-05-08 <dave at tiredofit dot ca>
 
    ### Added

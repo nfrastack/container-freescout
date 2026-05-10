@@ -1,7 +1,7 @@
 services:
 
   freescout-app:
-    image: docker.io/tiredofit/freescout
+    image: docker.io/tiredofit/freescout:1.17:999
     container_name: freescout-app
     volumes:
       - ./data:/data
@@ -20,16 +20,14 @@ services:
       - ADMIN_EMAIL=admin@admin.com
       - ADMIN_PASS=freescout
 
-      - DISPLAY_ERRORS=FALSE
-
-      - ENABLE_SSL_PROXY=TRUE
+      - FREESCOUT_VERSION=1.8.219
     networks:
       - proxy
       - services
     restart: always
 
   freescout-db:
-    image: docker.io/nfrastack/mariadb:10.11
+    image: docker.io/nfrastack/mariadb:11.8
     container_name: freescout-db
     volumes:
       - ./db:/data

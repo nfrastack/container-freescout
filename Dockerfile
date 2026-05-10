@@ -10,7 +10,7 @@ ENV FREESCOUT_VERSION=${FREESCOUT_VERSION:-"1.8.219"} \
     FREESCOUT_REPO_URL=https://github.com/freescout-helpdesk/freescout \
     NGINX_WEBROOT=/www/html \
     NGINX_SITE_ENABLED=freescout \
-    PHP_CREATE_SAMPLE_PHP=FALSE \
+    PHP_ENABLE_CREATE_SAMPLE_PHP=FALSE \
     PHP_ENABLE_CURL=TRUE \
     PHP_ENABLE_FILEINFO=TRUE \
     PHP_ENABLE_GNUPG=TRUE \
@@ -45,7 +45,6 @@ RUN source /assets/functions/00-container && \
     php-ext prepare && \
     php-ext reset && \
     php-ext enable core && \
-    php-ext enable core && \
     clone_git_repo ${FREESCOUT_REPO_URL} ${FREESCOUT_VERSION} /assets/install && \
     mkdir -p vendor/natxet/cssmin/src && \
     mkdir -p vendor/rap2hpoutre/laravel-log-viewer/src/controllers && \
@@ -58,6 +57,7 @@ RUN source /assets/functions/00-container && \
             /assets/install/.env.example \
             /assets/install/.env.travis \
             && \
+    echo "${FREESCOUT_VERSION}" > /assets/.freescout-image-version && \
     chown -R "${NGINX_USER}":"${NGINX_GROUP}" /assets/install && \
     package cleanup && \
     \
@@ -66,3 +66,5 @@ RUN source /assets/functions/00-container && \
            /var/tmp/*
 
 COPY install /
+COPY README.md /
+COPY CHANGELOG.md /

@@ -6,6 +6,112 @@ PROCESS_NAME="freescout"
 
 check_service_initialized init 20-php-fpm
 
+if [ -f /assets/.freescout-image-version ]; then
+    IMAGE_FREESCOUT_VERSION=$(cat /assets/.freescout-image-version)
+fi
+
+_eol_version_override=""
+if [ -n "${FREESCOUT_VERSION}" ] && [ -n "${IMAGE_FREESCOUT_VERSION}" ] && [ "${FREESCOUT_VERSION}" != "${IMAGE_FREESCOUT_VERSION}" ]; then
+    _eol_version_override=true
+fi
+
+_eol_in_app_updater=""
+if ! var_true "${APP_DISABLE_UPDATING:-TRUE}" ; then
+    _eol_in_app_updater=true
+fi
+
+cat <<EOF
+
+*******************************************************************************************
+*                                                                                         *
+*                       END OF LIFE NOTICE MAY 9, 2026                                    *
+*                               tiredofit/freescout                                       *
+*                                                                                         *
+* This image is no longer maintained and will not receive new features or fixes.          *
+*                                                                                         *
+* Successor image:                                                                        *
+*   - https://github.com/nfrastack/container-freescout                                    *
+*   - https://hub.docker.com/r/nfrastack/freescout                                        *
+*                                                                                         *
+* Same maintainer, differnet namespace.                                                   *
+*                                                                                         *
+* nfrastack/container-freescout 2.x introduces significant environment variable changes   *
+* plan to revise your configuration file compose file when migrating.                     *
+*                                                                                         *
+* This final image contains FreeScout ${IMAGE_FREESCOUT_VERSION:-unknown}                                             *
+*                                                                                         *
+EOF
+
+if [ -n "${_eol_version_override}" ] || [ -n "${_eol_in_app_updater}" ]; then
+    echo "* Extended-life options currently active on this image:                                   *"
+    echo "*                                                                                         *"
+    if [ -n "${_eol_version_override}" ]; then
+        echo "*   - FREESCOUT_VERSION=${FREESCOUT_VERSION} override (image built with ${IMAGE_FREESCOUT_VERSION})                       *"
+    fi
+    if [ -n "${_eol_in_app_updater}" ]; then
+        echo "*   - APP_DISABLE_UPDATING=FALSE - FreeScout in-app updater enabled                       *"
+    fi
+else
+    echo "* Olive branches for staying on THIS image:                                               *"
+    echo "*                                                                                         *"
+    echo "*   - Set FREESCOUT_VERSION to a newer release - the container will re-clone, run         *"
+    echo "*     composer install, and rebuild assets on startup. This will take a few minutes       *"
+    echo "*     each container start - This is the recommended approach.                            *"
+    echo "*                                                                                         *"
+    echo "*   OR                                                                                    *"
+    echo "*                                                                                         *"
+    echo "*   - Set APP_DISABLE_UPDATING=FALSE to enable FreeScout's in-app updater, this will only *"
+    echo "*     work if you are exposing /www/html as a volume. Lots of opportunities for breakage  *"
+    echo "*     can then upgrade from the FreeScout UI.                                             *"
+fi
+
+cat <<EOF
+*                                                                                         *
+*   These paths will eventually break on upstream application, PHP, schema changes that   *
+*   this image cannot satisfy. Treat them as a bridge, not a permanent solution.          *
+*                                                                                         *
+*   Come inside the container to see the original README.md file shipped with this image  *
+*   and environment variable references.                                                  *
+*                                                                                         *
+*   See you in the nfrastack - https://nfrastack.com                                      *
+*                                                                                         *
+*******************************************************************************************
+
+EOF
+
+sleep 15
+
+if [ -n "${FREESCOUT_VERSION}" ] && [ -n "${IMAGE_FREESCOUT_VERSION}" ] && [ "${FREESCOUT_VERSION}" != "${IMAGE_FREESCOUT_VERSION}" ]; then
+    _deployed_version=""
+    if [ -f "${NGINX_WEBROOT}/.freescout-version" ]; then
+        _deployed_version=$(head -n 1 "${NGINX_WEBROOT}/.freescout-version" | awk '{print $1}')
+    elif [ -f "/data/.freescout-version" ]; then
+        _deployed_version=$(head -n 1 "/data/.freescout-version" | awk '{print $1}')
+    fi
+
+    if [ "${_deployed_version}" = "${FREESCOUT_VERSION}" ]; then
+        print_info "FREESCOUT_VERSION=${FREESCOUT_VERSION} already deployed - skipping rebuild of /assets/install"
+    else
+        print_warn "Image built with FreeScout ${IMAGE_FREESCOUT_VERSION} but FREESCOUT_VERSION=${FREESCOUT_VERSION} - re-cloning"
+        print_warn "This rebuilds /assets/install (git clone + composer install + freescout:build) and may take several minutes"
+        rm -rf /assets/install
+        silent clone_git_repo "${FREESCOUT_REPO_URL}" "${FREESCOUT_VERSION}" /assets/install
+        { set +x; } 2>/dev/null
+        cd /assets/install
+        mkdir -p vendor/natxet/cssmin/src
+        mkdir -p vendor/rap2hpoutre/laravel-log-viewer/src/controllers
+        print_warn "Running composer install for FreeScout ${FREESCOUT_VERSION} - this takes a few minutes"
+        silent composer install --ignore-platform-reqs --no-interaction
+        print_warn "Running php artisan freescout:build for FreeScout ${FREESCOUT_VERSION}"
+        silent php artisan freescout:build
+        rm -rf /assets/install/.env.example
+        chown -R "${NGINX_USER}":"${NGINX_GROUP}" /assets/install
+        echo "${FREESCOUT_VERSION}" > /assets/.freescout-image-version
+        export ENABLE_AUTO_UPDATE=TRUE
+        print_info "FreeScout ${FREESCOUT_VERSION} staged in /assets/install - upgrade will continue below"
+    fi
+fi
+
 ### Check if New Install
 if [ ! -f "${NGINX_WEBROOT}/server.php" ]; then
     print_warn "Potential New Installation / Standalone Installation Detected - Copying Freescout Sourcecode"
@@ -138,9 +244,13 @@ if grep -q "APP_URL" "${NGINX_WEBROOT}"/.env > /dev/null 2>&1; then
             sed -i --follow-symlinks "/APP_DOWNLOAD_ATTACHMENTS_VIA=nginx/d" "${NGINX_WEBROOT}"/.env
         fi
 
-        # Disable App Updating
-        if ! grep -q "APP_DISABLE_UPDATING" "${NGINX_WEBROOT}"/.env > /dev/null 2>&1; then
-            echo "APP_DISABLE_UPDATING=true" | sudo -u "${NGINX_USER}" tee -a "${NGINX_WEBROOT}"/.env
+        # FreeScout's built-in updater - default disabled to match historical image behaviour;
+        # set APP_DISABLE_UPDATING=FALSE to let users upgrade FreeScout in-place from the UI.
+        if var_true "${APP_DISABLE_UPDATING:-TRUE}" ; then _app_disable_updating=true ; else _app_disable_updating=false ; fi
+        if grep -q "APP_DISABLE_UPDATING" "${NGINX_WEBROOT}"/.env > /dev/null 2>&1; then
+            sed -i --follow-symlinks "s#APP_DISABLE_UPDATING=.*#APP_DISABLE_UPDATING=${_app_disable_updating}#g" "${NGINX_WEBROOT}"/.env
+        else
+            echo "APP_DISABLE_UPDATING=${_app_disable_updating}" | sudo -u "${NGINX_USER}" tee -a "${NGINX_WEBROOT}"/.env
         fi
 
         # App Proxy (1.8.25)
@@ -219,7 +329,8 @@ else
     echo "DB_DATABASE=$DB_NAME" | silent sudo -u "${NGINX_USER}" tee -a "${NGINX_WEBROOT}"/.env
     echo "DB_USERNAME=$DB_USER" | silent sudo -u "${NGINX_USER}" tee -a "${NGINX_WEBROOT}"/.env
     echo "DB_PASSWORD=$DB_PASS" | silent sudo -u "${NGINX_USER}" tee -a "${NGINX_WEBROOT}"/.env
-    echo "APP_DISABLE_UPDATING=true" | silent sudo -u "${NGINX_USER}" tee -a "${NGINX_WEBROOT}"/.env
+    if var_true "${APP_DISABLE_UPDATING:-TRUE}" ; then _app_disable_updating=true ; else _app_disable_updating=false ; fi
+    echo "APP_DISABLE_UPDATING=${_app_disable_updating}" | silent sudo -u "${NGINX_USER}" tee -a "${NGINX_WEBROOT}"/.env
 
     # Generate Key
     cd "${NGINX_WEBROOT}"/

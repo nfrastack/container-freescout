@@ -1,13 +1,9 @@
-version: '2'
-
 services:
   freescout-app:
-    image: tiredofit/freescout
+    image: docker.io/tiredofit/freescout:1.17.999
     container_name: freescout-app
     ports:
-    - 80:80
-    links:
-    - freescout-db
+      - 80:80
     volumes:
     ### If you want to perform customizations to the source and have access to it, then uncomment this line - This includes modules
     #- ./data:/www/html
@@ -18,7 +14,7 @@ services:
     - ./logs/:/www/logs
     environment:
     - CONTAINER_NAME=freescout-app
-    
+
     - DB_HOST=freescout-db
     - DB_NAME=freescout
     - DB_USER=freescout
@@ -30,10 +26,12 @@ services:
     - ENABLE_SSL_PROXY=FALSE
     - DISPLAY_ERRORS=FALSE
     - TIMEZONE=America/Vancouver
+
+    - FREESCOUT_VERSION=1.8.219
     restart: always
 
   freescout-db:
-    image: tiredofit/mariadb
+    image: docker.io/nfrastack/mariadb:11.8
     container_name: freescout-db
     volumes:
       - ./db:/var/lib/mysql
@@ -48,21 +46,17 @@ services:
 
   freescout-db-backup:
     container_name: freescout-db-backup
-    image: tiredofit/db-backup
-    links:
-     - freescout-db
+    image: docker.io/tiredofit/db-backup
     volumes:
       - ./dbbackup:/backup
     environment:
       - CONTAINER_NAME=freescout-db-backup
-      - DB_HOST=freescout-db
-      - DB_TYPE=mariadb
-      - DB_NAME=freescout
-      - DB_USER=freescout
-      - DB_PASS=freescout
+      - DB01_HOST=freescout-db
+      - DB01_TYPE=mariadb
+      - DB01_NAME=freescout
+      - DB01_USER=freescout
+      - DB01_PASS=freescout
       - DB01_BACKUP_INTERVAL=1440
       - DB01_BACKUP_BEGIN=0000
-      - DB_CLEANUP_TIME=8640
-      - COMPRESSION=BZ
-      - MD5=TRUE
+      - DB01_CLEANUP_TIME=8640
     restart: always

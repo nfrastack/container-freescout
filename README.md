@@ -9,6 +9,37 @@
 
 * * *
 
+## End of Life Notice - May 9, 2026
+
+**This image (`tiredofit/freescout`) is no longer actively maintained and will not receive new features or fixes.**
+
+A successor image is available and is where ongoing development continues:
+
+* Repository: <https://github.com/nfrastack/container-freescout>
+
+* Docker Hub: <https://hub.docker.com/r/nfrastack/freescout>
+* GHCR: <https://github.com/nfrastack/container-freescout/pkgs/container/container-freescout>
+
+Same maintainer, differnet namespace.
+
+nfrastack/container-freescout 2.x introduces significant environment variable changes plan to revise your configuration file compose file when migrating.
+
+This final image contains FreeScout 1.8.219
+
+Olive branches for staying on THIS image:
+
+  - Set FREESCOUT_VERSION when starting image to a newer release - the container will re-clone, run composer install, and rebuild assets on startup. This will take a few minutes each container start - This is the recommended approach.
+
+  OR
+
+  - Set APP_DISABLE_UPDATING=FALSE to enable FreeScout's in-app updater, this will only work if you are exposing /www/html as a volume. Lots of opportunities for breakage can then upgrade from the FreeScout UI.
+
+  Both paths will eventually break on upstream PHP/extension/schema changes that this image cannot satisfy. Treat them as a bridge, not a permanent solution.
+
+  See you in the nfrastack - https://nfrastack.com
+
+* * *
+
 ## About
 
 This will build a Docker Image for [FreeScout](https://freescout.net/) - An open source Helpscout / Zendesk alternative.
@@ -122,11 +153,13 @@ Be sure to view the following repositories to understand all the customizable op
 
 | Parameter                              | Description                                                                                     | Default     | `_FILE` |
 | -------------------------------------- | ----------------------------------------------------------------------------------------------- | ----------- | ------- |
+| `FREESCOUT_VERSION`                    | Set to the version you wish to override install for the final EOL Image                         |             |         |
 | `ADMIN_EMAIL`                          | Administrator Email Address - Needed for logging in                                             |             | x       |
 | `ADMIN_FIRST_NAME`                     | Admin user First Name                                                                           | `Admin`     | x       |
 | `ADMIN_LAST_NAME`                      | Admin user First Name                                                                           | `User`      | x       |
 | `ADMIN_PASS`                           | Administrator Password - Needed for Logging in                                                  |             | x       |
 | `APPLICATION_NAME`                     | Change default application name - Default `Freescout`                                           | `freescout` |         |
+| `APP_DISABLE_UPDATING`                 | Disable FreeScout's built-in in-app updater. Set to `FALSE` to let users upgrade from the UI    | `TRUE`      |         |
 | `APP_PROXY`                            | Allow Application to use a proxy for fetching modules                                           |             |         |
 | `APP_TRUSTED_PROXIES`                  | Comma separated list of trusted proxies, i.e. `192.168.1.1,192.168.1.2,192.168.1.3`             |             |         |
 | `APP_SINCE_WITHOUT_QUOTES_ON_FETCHING` | Allow to disable quotes around SINCE date in IMAP search                                        | `FALSE`     |         |
@@ -141,6 +174,7 @@ Be sure to view the following repositories to understand all the customizable op
 | `DB_SSL`                               | Used to enable SSL support for MySQL and MariaDB databases                                      | `FALSE`     |         |
 | `DISPLAY_ERRORS`                       | Display Errors on Website                                                                       | `FALSE`     |         |
 | `ENABLE_AUTO_UPDATE`                   | If coming from an earlier version of image, automatically update it to latest Freescout release | `TRUE`      |         |
+| `FREESCOUT_VERSION`                    | Override baked FreeScout version - re-clones+composer+build on startup (slow cold start)        |             |         |
 | `SETUP_TYPE`                           | Automatically edit configuration after first bootup `AUTO` or `MANUAL`                          | `AUTO`      |         |
 | `SITE_URL`                             | The url your site listens on example `https://freescout.example.com`                            |             |         |
 | `SKIP_STORAGE_PERMISSIONS`             | Skip applying permission to storage path, e.g. for instances involving large storage paths      | `FALSE`     |         |
