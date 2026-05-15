@@ -57,6 +57,7 @@ RUN echo "" && \
                                 " \
                                 && \
     FREESCOUT_RUN_DEPS_ALPINE=" \
+                                    expect \
                                     git \
                               " \
                               && \
@@ -64,6 +65,7 @@ RUN echo "" && \
                                 " \
                                 && \
     FREESCOUT_RUN_DEPS_DEBIAN=" \
+                                    expect \
                                     git \
                               " \
                               && \
@@ -93,11 +95,11 @@ RUN echo "" && \
                     && \
     php artisan freescout:build && \
     rm -rf \
+           "${LARAVEL_INSTALL_DATA_PATH}"/install/.editorconfig \
            "${LARAVEL_INSTALL_DATA_PATH}"/install/.env.travis \
-           "${LARAVEL_INSTALL_DATA_PATH}"/install/.git \
-           "${LARAVEL_INSTALL_DATA_PATH}"/install/.github \
-           "${LARAVEL_INSTALL_DATA_PATH}"/install/.gitattributes \
-           "${LARAVEL_INSTALL_DATA_PATH}"/install/.gitignore \
+           "${LARAVEL_INSTALL_DATA_PATH}"/install/.git* \
+           "${LARAVEL_INSTALL_DATA_PATH}"/install/.htaccess \
+           "${LARAVEL_INSTALL_DATA_PATH}"/install/.travis.yml \
            "${LARAVEL_INSTALL_DATA_PATH}"/install/tests \
            && \
     container_build_log add "FreeScout ${FREESCOUT_VERSION}" "${FREESCOUT_REPO_URL}" && \

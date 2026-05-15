@@ -6,8 +6,6 @@ services:
       - traefik.enable=true
       - traefik.http.routers.freescout.rule=Host(`freescout.example.com`)
       - traefik.http.services.freescout.loadbalancer.server.port=80
-    ports:
-      - 8000:80
     volumes:
       - ./data:/data
       - ./logs:/logs

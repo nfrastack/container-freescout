@@ -23,10 +23,9 @@ This repository will build a container image for running [FreeScout](https://fre
     * [Core Configuration](#core-configuration)
     * [Database](#database)
     * [Application](#application)
-    * [Setting Arbitrary FreeScout Keys](#setting-arbitrary-freescout-keys-via-laravel_env_prefix)
+    * [Setting FreesScout configuration](#setting-freescout-configuration)
     * [Scheduler](#scheduler)
   * [Networking](#networking)
-* [Upgrading from 1.x](#upgrading-from-1x)
 * [Maintenance](#maintenance)
   * [Shell Access](#shell-access)
 * [Support & Maintenance](#support--maintenance)
@@ -64,6 +63,7 @@ Example:
 | 8.3.x       | `:<imageversion>-php8.3` |
 
 Have a look at the container registries and see what tags are available.
+
 #### Multi-Architecture Support
 
 Images are built for `amd64` by default, with optional support for `arm64` and other architectures.
@@ -80,12 +80,12 @@ Images are built for `amd64` by default, with optional support for `arm64` and o
 
 The following directories should be mapped for persistent storage. The `/data` mount is recommended - it covers config, sessions, cache, modules, and the version marker in one place. Mounting `/www/html` instead is supported when you want the FreeScout source tree exposed for inspection or self-update.
 
-| Directory   | Description                                                                     |
-| ----------- | ------------------------------------------------------------------------------- |
-| `/logs`     | Nginx and PHP log files                                                         |
-| `/www/html` | (Optional) Expose the FreeScout source tree to the host                         |
-| **OR**      |                                                                                 |
-| `/data`     | Persistent state - sessions, cache, uploads, `Modules/`, configuration          |
+| Directory   | Description                                                            |
+| ----------- | ---------------------------------------------------------------------- |
+| `/logs`     | Nginx and PHP log files                                                |
+| `/www/html` | (Optional) Expose the FreeScout source tree to the host                |
+| **OR**      |                                                                        |
+| `/data`     | Persistent state - sessions, cache, uploads, `Modules/`, configuration |
 
 ## Configuration
 
@@ -103,7 +103,6 @@ Be sure to view the following repositories to understand all the customizable op
 | [Nginx PHP-FPM](https://github.com/nfrastack/container-nginx-php-fpm) | PHP-FPM interpreter |
 | [Laravel](https://github.com/nfrastack/container-laravel)             | Laravel runtime     |
 
-
 Below is the complete list of available options that can be used to customize your installation.
 
 * Variables showing an 'x' under the `Advanced` column can only be set if the containers advanced functionality is enabled.
@@ -119,9 +118,8 @@ Below is the complete list of available options that can be used to customize yo
 | `ADMIN_LAST_NAME`            | Last name of the bootstrap admin                                                                                     | `User`                 | x       |
 | `ADMIN_PASS`                 | Password of the bootstrap admin                                                                                      | `freescout`            | x       |
 | `ENABLE_AUTO_UPDATE`         | Auto-upgrade FreeScout source on container restart when image version differs from `${DATA_PATH}/.freescout-version` | `TRUE`                 |         |
-| `DATA_PATH`                  | Base persistent-data path (sessions, cache, modules, version marker live under here)                                 | `/data/`                |         |
+| `DATA_PATH`                  | Base persistent-data path (sessions, cache, modules, version marker live under here)                                 | `/data/`               |         |
 | `MODULES_PATH`               | Persistent storage for FreeScout `Modules/` directory                                                                | `${DATA_PATH}/Modules` |         |
-| `ENABLE_FREESCOUT_SCHEDULER` | Run `php artisan schedule:run` once per minute. Required for mail fetch / digest / queue                             | `TRUE`                 |         |
 
 #### Database
 
@@ -140,7 +138,7 @@ Below is the complete list of available options that can be used to customize yo
 | Parameter  | Description                                                                     | Default | Alias      | `_FILE` |
 | ---------- | ------------------------------------------------------------------------------- | ------- | ---------- | ------- |
 | `APP_URL`  | Full external URL of the site (e.g. `https://freescout.example.com`). Required. |         | `SITE_URL` |         |
-| `SITE_URL` | Legacy alias for `APP_URL`        |         |            |         |
+| `SITE_URL` | Legacy alias for `APP_URL`                                                      |         |            |         |
 
 #### Setting FreeScout configuration
 

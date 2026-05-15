@@ -38,8 +38,6 @@ freescout_compare_version() {
     cp -aR "${LARAVEL_INSTALL_DATA_PATH%/}"/install/. "${NGINX_WEBROOT%/}/"
     chown -R "${NGINX_USER}":"${NGINX_GROUP}" "${NGINX_WEBROOT}"
 
-    freescout_upgrade_legacy "${_current_version}"
-
     cd "${NGINX_WEBROOT}"
     silent sudo -u "${NGINX_USER}" php "${NGINX_WEBROOT%/}"/artisan migrate --no-interaction --force
     silent sudo -u "${NGINX_USER}" php "${NGINX_WEBROOT%/}"/artisan freescout:after-app-update
@@ -47,22 +45,12 @@ freescout_compare_version() {
     sed -i --follow-symlinks "1i ${_image_version} upgraded on ${_timestamp}" "${_version_file}"
 }
 
-freescout_upgrade_legacy() {
-    # Rolls forward state that historic FreeScout releases left behind. Only runs
-    # during an in-place version bump; on a fresh install nothing here applies.
-    local _from="${1:-}"
-}
-
 freescout_bootstrap_volatile_data() {
-    # FreeScout-specific persistent paths on top of laravel_volatile_setup.
-    # Storage/log/config redirection are owned by the laravel parent.
     if var_false "${ENABLE_STORAGE_REDIRECTION}"; then
         return
     fi
 
     create_folder "${DATA_PATH}" "${NGINX_USER}":"${NGINX_GROUP}" 750
-
-    # /data/Modules - persistent module storage
     if [ ! -d "${MODULES_PATH%/}" ]; then
         if [ -d "${NGINX_WEBROOT%/}"/Modules ]; then
             cp -R "${NGINX_WEBROOT%/}"/Modules "${MODULES_PATH%/}"
@@ -111,18 +99,6 @@ freescout_configure_app() {
     laravel_env_update APP_DISABLE_UPDATING true
 }
 
-freescout_install_modules() {
-    if [ ! -d "${NGINX_WEBROOT%/}"/Modules ]; then return; fi
-    if dir_empty "${NGINX_WEBROOT%/}"/Modules ; then return; fi
-
-    print_notice "Registering FreeScout modules"
-    cd "${NGINX_WEBROOT}"
-    silent sudo -u "${NGINX_USER}" php "${NGINX_WEBROOT%/}"/artisan \
-                                                                    freescout:module-install \
-                                                                        --no-interaction \
-                                                                        --force
-}
-
 freescout_create_admin() {
     transform_var file \
                         ADMIN_EMAIL \
@@ -141,4 +117,18 @@ freescout_create_admin() {
                                                                     --lastName="${ADMIN_LAST_NAME}" \
                                                                     --email="${ADMIN_EMAIL}" \
                                                                     --password="${ADMIN_PASS}"
+}
+
+freescout_install_modules() {
+    if [ ! -d "${NGINX_WEBROOT%/}"/Modules ] || dir_empty "${NGINX_WEBROOT%/}"/Modules; then return; fi
+
+    print_notice "Registering FreeScout modules"
+    silent /usr/bin/expect<<EOMODULES
+spawn sudo -u "${NGINX_USER}" php "${NGINX_WEBROOT%/}"/artisan freescout:module-install --no-ansi
+expect \
+{
+  (yes/no) {exp_send yes\r;exp_continue}
+  eof {}
+}
+EOMODULES
 }

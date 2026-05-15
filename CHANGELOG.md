@@ -1,3 +1,9 @@
+## 2.0.1 2026-05-15 <code at nfrastack dot com>
+
+   ### Changed
+      - Reintroduce old 1.x mechanism for installing modules
+
+
 ## 2.0.0 2026-05-11 <code at nfrastack dot com>
 
    ### Added
