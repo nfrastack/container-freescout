@@ -1,3 +1,12 @@
+## 2.0.2 2026-05-17 <code at nfrastack dot com>
+
+   ### Added
+      - FreeScout 2.2.0
+
+   ### Changed
+      - Reintroduce TIMEZONE= variable support to APP_TIMEZONE
+
+
 ## 2.0.1 2026-05-15 <code at nfrastack dot com>
 
    ### Changed

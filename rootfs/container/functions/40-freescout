@@ -97,6 +97,7 @@ freescout_configure_app() {
     fi
 
     laravel_env_update APP_DISABLE_UPDATING true
+    laravel_env_update APP_TIMEZONE "${TIMEZONE}"
 }
 
 freescout_create_admin() {
