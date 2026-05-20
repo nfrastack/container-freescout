@@ -38,6 +38,7 @@ RUN echo "" && \
                 20-php-fpm/PHP_MODULE_ENABLE_ICONV=TRUE \
                 20-php-fpm/PHP_MODULE_ENABLE_IGBINARY=TRUE \
                 20-php-fpm/PHP_MODULE_ENABLE_PCNTL=TRUE \
+                20-php-fpm/PHP_MODULE_ENABLE_PDO_PGSQL=TRUE \
                 30-laravel/APP_NAME=FreeScout \
                 30-laravel/DB_TYPE=mysql \
                 30-laravel/ENABLE_LARAVEL_WORKER=FALSE \

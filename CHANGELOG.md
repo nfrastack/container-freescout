@@ -1,3 +1,9 @@
+## 2.0.3 2026-05-20 <code at nfrastack dot com>
+
+   ### Changed
+      - Restore PHP pdo_pgsql support that was inadvertently removed from 1.x -> 2.x
+
+
 ## 2.0.2 2026-05-17 <code at nfrastack dot com>
 
    ### Added
