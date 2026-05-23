@@ -12,7 +12,7 @@ jobs:
           - { php_version: "8.5", php_version_latest: "true",  distro: "alpine", distro_variant: "3.23", latest: "false",  distro_latest: "false",  arch: "linux/amd64,linux/arm64" }
           - { php_version: "8.4", php_version_latest: "true",  distro: "alpine", distro_variant: "3.23", latest: "true",  distro_latest: "false",  arch: "linux/amd64,linux/arm64" }
           - { php_version: "8.3", php_version_latest: "true",  distro: "alpine", distro_variant: "3.23", latest: "false", distro_latest: "false", arch: "linux/amd64,linux/arm64" }
-          - { php_version: "8.2", php_version_latest: "true",  distro: "alpine", distro_variant: "3.22", latest: "false", distro_latest: "false", arch: "linux/amd64,linux/arm64" }
+          #- { php_version: "8.2", php_version_latest: "true",  distro: "alpine", distro_variant: "3.22", latest: "false", distro_latest: "false", arch: "linux/amd64,linux/arm64" }
     uses: nfrastack/gha/.github/workflows/container-build_generic.yml@main
     with:
       base_image: "ghcr.io/nfrastack/container-laravel"
