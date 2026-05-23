@@ -17,10 +17,6 @@ if [ "${SETUP_TYPE,,}" = "auto" ]; then
     freescout_compare_version
     freescout_configure_app
 
-    silent sudo -u "${NGINX_USER}" php "${NGINX_WEBROOT%/}"/artisan \
-                                                                    key:generate \
-                                                                        --force
-
     if laravel_db_is_populated; then
         print_info "DB schema present - running migrations only"
         silent sudo -u "${NGINX_USER}" php "${NGINX_WEBROOT%/}"/artisan \
