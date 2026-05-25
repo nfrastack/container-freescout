@@ -1,3 +1,12 @@
+## 2.0.5 2026-05-25 <code at nfrastack dot com>
+
+   ### Added
+      - FreeScout 1.8.222
+
+   ### Changed
+      - Revert to letting nfrastack/laravel generate APP_KEY due to conflict
+
+
 ## 2.0.4 2026-05-23 <code at nfrastack dot com>
 
    ### Added
