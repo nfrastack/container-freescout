@@ -122,14 +122,22 @@ freescout_create_admin() {
 
 freescout_install_modules() {
     if [ ! -d "${NGINX_WEBROOT%/}"/Modules ] || dir_empty "${NGINX_WEBROOT%/}"/Modules; then return; fi
-
     print_notice "Registering FreeScout modules"
-    silent /usr/bin/expect<<EOMODULES
+    if var_true "${MODULE_DEBUG}"; then
+        set -x ;
+    else
+        prefix=silent;
+    fi
+
+    ${prefix} /usr/bin/expect<<EOMODULES
 spawn sudo -u "${NGINX_USER}" php "${NGINX_WEBROOT%/}"/artisan freescout:module-install --no-ansi
+set timeout 30
 expect \
 {
   (yes/no) {exp_send yes\r;exp_continue}
   eof {}
+#  timeout {puts "Putting you in control - to exit type \\ twice";interact \\\\}
 }
 EOMODULES
+    if var_true "${MODULE_DEBUG}"; then set +x ; fi
 }
