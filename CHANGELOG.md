@@ -1,3 +1,8 @@
+## 2.0.6beta 2026-05-26 <code at nfrastack dot com>
+
+   ### Changed
+      - Continued changes to module installation problem to bring closer to 1.x series
+
 ## 2.0.5 2026-05-25 <code at nfrastack dot com>
 
    ### Added
