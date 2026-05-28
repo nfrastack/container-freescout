@@ -113,6 +113,27 @@ The log path changed. If you have `/www/logs` mapped, remap it to `/logs`:
 * The `/assets/custom`, `/assets/custom-scripts`, and `/assets/modules` volume mounts **no longer exist**. Remove them from your compose file.
 * Your existing `/data` or `/www/html` volume can remain as-is, the container will detect the existing state on first boot.
 
+### Verify the config file layout
+
+In 2.x the `.env`/config file is stored at `/data/config/config` (a file inside a directory), whereas in 1.x it was stored directly as `/data/config` (a plain file).
+
+The container will detect and automatically migrate the old layout on first boot. If the auto-migration did not work, or you want to verify before starting the new container, check the layout on your host:
+
+```bash
+# Should print "directory"
+stat -c '%F' ./data/config
+```
+
+If it prints `regular file` instead, run the manual migration by moving the old file out of the way, create the directory, restore the file inside it:
+
+```bash
+mv ./data/config ./data/config.bak
+mkdir ./data/config
+mv ./data/config.bak ./data/config/config
+```
+
+Alternatively, set `CONFIG_PATH=/data` in your compose environment to point the container at the old file location - though the directory layout above is recommended.
+
 ### Update environment variables
 
 Most FreeScout application configuration variables that were set directly in 1.x must now carry a `FREESCOUT_` prefix.
@@ -177,11 +198,11 @@ docker compose up -d
 
 The following directories should be mapped for persistent storage. The `/data` mount is recommended - it covers config, sessions, cache, modules, and the version marker in one place. Mounting `/www/html` instead is supported when you want the FreeScout source tree exposed for inspection or self-update.
 
-| Directory   | Description                                                            |
-| ----------- | ---------------------------------------------------------------------- |
-| `/logs`     | Nginx and PHP log files                                                |
-| `/www/html` | (Optional) Expose the FreeScout source tree to the host                |
-| **OR**      |                                                                        |
+| Directory   | Description                                                                    |
+| ----------- | ------------------------------------------------------------------------------ |
+| `/logs`     | Nginx and PHP log files                                                        |
+| `/www/html` | (Optional) Expose the FreeScout source tree to the host                        |
+| **OR**      |                                                                                |
 | `/data`     | Persistent state - sessions, cache, uploads, `Modules/`, configuration |
 
 ## Configuration
@@ -215,7 +236,10 @@ Below is the complete list of available options that can be used to customize yo
 | `ADMIN_PASS`         | Password of the bootstrap admin                                                                                      | `freescout`            | x       |
 | `ENABLE_AUTO_UPDATE` | Auto-upgrade FreeScout source on container restart when image version differs from `${DATA_PATH}/.freescout-version` | `TRUE`                 |         |
 | `DATA_PATH`          | Base persistent-data path (sessions, cache, modules, version marker live under here)                                 | `/data/`               |         |
+| `CONFIG_PATH`        | Config file (.env file redirection) lives here                                                                       | `${DATA_PATH}/config/` |         |
+| `CONFIG_FILE`        | Actual name of config file                                                                                           | `config`               |         |
 | `MODULES_PATH`       | Persistent storage for FreeScout `Modules/` directory                                                                | `${DATA_PATH}/Modules` |         |
+
 
 #### Database
 
