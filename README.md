@@ -17,13 +17,14 @@ This repository will build a container image for running [FreeScout](https://fre
   * [Prebuilt Images](#prebuilt-images)
   * [Quick Start](#quick-start)
   * [Persistent Storage](#persistent-storage)
+* [Upgrading from 1.x](#upgrading-from-1x)
 * [Configuration](#configuration)
   * [Environment Variables](#environment-variables)
     * [Base Images used](#base-images-used)
     * [Core Configuration](#core-configuration)
     * [Database](#database)
     * [Application](#application)
-    * [Setting FreesScout configuration](#setting-freescout-configuration)
+    * [Setting FreeScout configuration](#setting-freescout-configuration)
     * [Scheduler](#scheduler)
   * [Networking](#networking)
 * [Maintenance](#maintenance)
@@ -68,6 +69,102 @@ Have a look at the container registries and see what tags are available.
 
 Images are built for `amd64` by default, with optional support for `arm64` and other architectures.
 
+## Upgrading from 1.x
+
+This section covers upgrading from the **tiredofit/freescout:1.x** image series to the **nfrastack/freescout:2.x** series. The 2.x image is based on a new base image (`nfrastack/laravel`) and introduces breaking changes to volume paths and environment variables.
+
+### Back up everything
+
+* Dump your database
+
+   If you are running MariaDB/MySQL:
+
+   ```bash
+   docker exec freescout-db mysqldump -u freescout -pfreescoutpass freescout > freescout-backup-$(date +%F).sql
+   ```
+
+* Copy your data volume to a safe location before any container changes.
+
+### Stop the running container
+
+```bash
+docker compose down
+```
+
+### Update the image reference
+
+The image has moved. Replace the old image name with the new one in your compose file or whatever you use to orchestrate your stacks.
+
+| Old (1.x)                              | New (2.x)                                      |
+| -------------------------------------- | ---------------------------------------------- |
+| `docker.io/tiredofit/freescout:latest` | `docker.io/nfrastack/freescout:latest`         |
+| `ghcr.io/tiredofit/docker-freescout`   | `ghcr.io/nfrastack/container-freescout:latest` |
+
+Refer to the tagging information in the README.
+
+### Update volume mounts
+
+The log path changed. If you have `/www/logs` mapped, remap it to `/logs`:
+
+| Old (1.x) mount | New (2.x) mount |
+| --------------- | --------------- |
+| `/www/logs`     | `/logs`         |
+
+* The `/assets/custom`, `/assets/custom-scripts`, and `/assets/modules` volume mounts **no longer exist**. Remove them from your compose file.
+* Your existing `/data` or `/www/html` volume can remain as-is, the container will detect the existing state on first boot.
+
+### Update environment variables
+
+Most FreeScout application configuration variables that were set directly in 1.x must now carry a `FREESCOUT_` prefix.
+
+These continue to work without a prefix:
+
+| Variable             | Notes                                              |
+| -------------------- | -------------------------------------------------- |
+| `SETUP_TYPE`         | Unchanged                                          |
+| `ADMIN_EMAIL`        | Unchanged                                          |
+| `ADMIN_FIRST_NAME`   | Unchanged                                          |
+| `ADMIN_LAST_NAME`    | Unchanged                                          |
+| `ADMIN_PASS`         | Unchanged                                          |
+| `ENABLE_AUTO_UPDATE` | Unchanged                                          |
+| `DB_TYPE`            | Unchanged; now also accepts `mariadb` / `postgres` |
+| `DB_HOST`            | Unchanged                                          |
+| `DB_PORT`            | Unchanged                                          |
+| `DB_NAME`            | Unchanged                                          |
+| `DB_USER`            | Unchanged                                          |
+| `DB_PASS`            | Unchanged                                          |
+| `DB_SSL`             | Unchanged                                          |
+| `SITE_URL`           | Unchanged or use `APP_URL`                         |
+
+#### Variables that now require the `FREESCOUT_` prefix
+
+If you had any of the following set in 1.x, add `FREESCOUT_` in front of them, there are many, or update your `.env` | `${DATA_PATH}/config/config` manually.
+
+| Old (1.x)                              | New (2.x)                                        |
+| -------------------------------------- | ------------------------------------------------ |
+| `APPLICATION_NAME`                     | `FREESCOUT_APPLOCATION_NAME`                     |
+| `APP_PROXY`                            | `FREESCOUT_APP_PROXY`                            |
+| `APP_TRUSTED_PROXIES`                  | `FREESCOUT_APP_TRUSTED_PROXIES`                  |
+| `APP_SINCE_WITHOUT_QUOTES_ON_FETCHING` | `FREESCOUT_APP_SINCE_WITHOUT_QUOTES_ON_FETCHING` |
+| `APP_X_FRAME_OPTIONS`                  | `FREESCOUT_APP_X_FRAME_OPTIONS`                  |
+| `DB_PGSQL_SSL_MODE`                    | `FREESCOUT_DB_PGSQL_SSL_MODE`                    |
+| `DISPLAY_ERRORS`                       | `FREESCOUT_APP_DEBUG`                            |
+
+#### Variables that have been removed
+
+| Old (1.x)                  | Notes    |
+| -------------------------- | -------- |
+| `SKIP_STORAGE_PERMISSIONS` | Removed. |
+
+#### Pull the new image and start
+
+```bash
+docker compose pull
+docker compose up -d
+```
+
+* * *
+
 ### Quick Start
 
 * The quickest way to get started is using [docker-compose](https://docs.docker.com/compose/). See [examples/compose.yml](examples/compose.yml) for a working stack you can tailor to your environment.
@@ -107,19 +204,18 @@ Below is the complete list of available options that can be used to customize yo
 
 * Variables showing an 'x' under the `Advanced` column can only be set if the containers advanced functionality is enabled.
 
-
 #### Core Configuration
 
-| Parameter                    | Description                                                                                                          | Default                | `_FILE` |
-| ---------------------------- | -------------------------------------------------------------------------------------------------------------------- | ---------------------- | ------- |
-| `SETUP_TYPE`                 | `AUTO` writes config, runs migrations, creates the bootstrap admin. `MANUAL` does nothing                            | `AUTO`                 |         |
-| `ADMIN_EMAIL`                | Email of the bootstrap admin user (created on a fresh DB only)                                                       | `admin@example.com`    | x       |
-| `ADMIN_FIRST_NAME`           | First name of the bootstrap admin                                                                                    | `Admin`                | x       |
-| `ADMIN_LAST_NAME`            | Last name of the bootstrap admin                                                                                     | `User`                 | x       |
-| `ADMIN_PASS`                 | Password of the bootstrap admin                                                                                      | `freescout`            | x       |
-| `ENABLE_AUTO_UPDATE`         | Auto-upgrade FreeScout source on container restart when image version differs from `${DATA_PATH}/.freescout-version` | `TRUE`                 |         |
-| `DATA_PATH`                  | Base persistent-data path (sessions, cache, modules, version marker live under here)                                 | `/data/`               |         |
-| `MODULES_PATH`               | Persistent storage for FreeScout `Modules/` directory                                                                | `${DATA_PATH}/Modules` |         |
+| Parameter            | Description                                                                                                          | Default                | `_FILE` |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------- | ---------------------- | ------- |
+| `SETUP_TYPE`         | `AUTO` writes config, runs migrations, creates the bootstrap admin. `MANUAL` does nothing                            | `AUTO`                 |         |
+| `ADMIN_EMAIL`        | Email of the bootstrap admin user (created on a fresh DB only)                                                       | `admin@example.com`    | x       |
+| `ADMIN_FIRST_NAME`   | First name of the bootstrap admin                                                                                    | `Admin`                | x       |
+| `ADMIN_LAST_NAME`    | Last name of the bootstrap admin                                                                                     | `User`                 | x       |
+| `ADMIN_PASS`         | Password of the bootstrap admin                                                                                      | `freescout`            | x       |
+| `ENABLE_AUTO_UPDATE` | Auto-upgrade FreeScout source on container restart when image version differs from `${DATA_PATH}/.freescout-version` | `TRUE`                 |         |
+| `DATA_PATH`          | Base persistent-data path (sessions, cache, modules, version marker live under here)                                 | `/data/`               |         |
+| `MODULES_PATH`       | Persistent storage for FreeScout `Modules/` directory                                                                | `${DATA_PATH}/Modules` |         |
 
 #### Database
 
@@ -135,10 +231,11 @@ Below is the complete list of available options that can be used to customize yo
 
 #### Application
 
-| Parameter  | Description                                                                     | Default | Alias      | `_FILE` |
-| ---------- | ------------------------------------------------------------------------------- | ------- | ---------- | ------- |
-| `APP_URL`  | Full external URL of the site (e.g. `https://freescout.example.com`). Required. |         | `SITE_URL` |         |
-| `SITE_URL` | Legacy alias for `APP_URL`                                                      |         |            |         |
+| Parameter  | Description                                                                     | Default | `_FILE` |
+| ---------- | ------------------------------------------------------------------------------- | ------- | ------- |
+| `APP_URL`  | Full external URL of the site (e.g. `https://freescout.example.com`). Required. |         |         |
+| or         |                                                                                 |         |         |
+| `SITE_URL` | alias for `APP_URL`                                                             |         |         |
 
 #### Setting FreeScout configuration
 

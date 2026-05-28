@@ -11,7 +11,7 @@ services:
     - ./data:/data
     ### If you want to just keep the original source and add additional modules uncomment this line
     #- ./modules:/www/html/Modules
-    - ./logs/:/www/logs
+    - ./logs/:/logs
     environment:
       - CONTAINER_NAME=freescout-app
       - TIMEZONE=America/Vancouver
@@ -57,7 +57,7 @@ services:
     image: docker.io/nfrastack/mariadb:11.8
     container_name: freescout-db
     volumes:
-      - ./db:/var/lib/mysql
+      - ./db:/data
     environment:
       - ROOT_PASS=password
       - DB_NAME=freescout
