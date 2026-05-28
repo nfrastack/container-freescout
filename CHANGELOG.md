@@ -1,3 +1,9 @@
+## 2.0.7 2026-05-28 <code at nfrastack dot com>
+
+   ### Changed
+      - Bump to nfrastack/container-laravel:1.0.3 which contains auto migration routines for ${CONFIG_PATH} conflicting with legacy images
+
+
 ## 2.0.6 2026-05-26 <code at nfrastack dot com>
 
    ### Changed
