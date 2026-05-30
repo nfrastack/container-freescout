@@ -120,6 +120,16 @@ freescout_create_admin() {
                                                                     --password="${ADMIN_PASS}"
 }
 
+freescout_configure_scheduler() {
+    if var_false "${ENABLE_FREESCOUT_SCHEDULER}" ; then
+        service_stop 41-freescout-scheduler
+        s6-svc -d /var/run/s6/legacy-services/41-freescout-scheduler
+        echo "* * * * * sudo -u ${NGINX_USER} TZ=${TIMEZONE} php ${NGINX_WEBROOT}/artisan schedule:run >> /dev/null 2>&1" | write_file /container/cron/freescout-schedule
+    else
+        print_notice "Enabling alternative FreeScout scheduling routines"
+    fi
+}
+
 freescout_install_modules() {
     if [ ! -d "${NGINX_WEBROOT%/}"/Modules ] || dir_empty "${NGINX_WEBROOT%/}"/Modules; then return; fi
     print_notice "Registering FreeScout modules"

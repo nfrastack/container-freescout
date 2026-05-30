@@ -11,6 +11,7 @@ sanity_db
 db_ready "${DB_TYPE}"
 
 freescout_bootstrap_volatile_data
+freescout_configure_scheduler
 
 if [ "${SETUP_TYPE,,}" = "auto" ]; then
     print_notice "Generating FreeScout Configuration"
@@ -47,6 +48,7 @@ if [ "${SETUP_TYPE,,}" = "auto" ]; then
 else
     print_warn "SETUP_TYPE='${SETUP_TYPE}' - skipping config generation, migrations, admin bootstrap"
 fi
+
 
 print_info "Initialization Complete. Please visit ${APP_URL:-${SITE_URL}} and login with your credentials."
 

@@ -1,3 +1,12 @@
+## 2.0.8 2026-05-30 <code at nfrastack dot com>
+
+   ### Added
+      - FreeScout 1.8.223
+
+   ### Changed
+      - Restore scheduling routines from cron when ENABLE_FREESCOUT_SCHEDULER=FALSE
+
+
 ## 2.0.7 2026-05-28 <code at nfrastack dot com>
 
    ### Changed
