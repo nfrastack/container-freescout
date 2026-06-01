@@ -1,20 +1,21 @@
 services:
   freescout-app:
-    image: docker.io/nfrastack/freescout:2.0
+    image: docker.io/nfrastack/freescout:latest
     container_name: freescout-app
     ports:
       - 80:80
     volumes:
-    ### If you want to perform customizations to the source and have access to it, then uncomment this line - This includes modules
-    #- ./data:/www/html
-    ### Or, if you just want to use Stock Freescout and hold onto persistent files like cache and session use this, one or the other.
-    - ./data:/data
-    ### If you want to just keep the original source and add additional modules uncomment this line
-    #- ./modules:/www/html/Modules
-    - ./logs/:/logs
+      ### If you want to perform customizations to the source and have access to it, then uncomment this line - This includes modules
+      #- ./data:/www/html
+      ### Or, if you just want to use Stock Freescout and hold onto persistent files like cache and session use this, one or the other.
+      - ./data:/data
+      ### If you want to just keep the original source and add additional modules uncomment this line
+      #- ./modules:/www/html/Modules
+      - ./logs:/logs
     environment:
       - CONTAINER_NAME=freescout-app
       - TIMEZONE=America/Vancouver
+      - DEBUG_MODE=FALSE
 
       - DB_TYPE=mariadb
       - DB_HOST=freescout-db
@@ -30,7 +31,7 @@ services:
       - ADMIN_LAST_NAME=Admin           #
       - ADMIN_PASS=freescout            #
 
-      - SITE_URL=https://freescout.example.com # Required
+      - APP_URL=https://freescout.example.com # Required!
 
       # All other FreeScout `.env` config goes through FREESCOUT_ prefix
       #
@@ -38,6 +39,7 @@ services:
       #   FREESCOUT_FOO=unset    FREESCOUT_FOO=null    FREESCOUT_FOO=
       #
       # Docker secrets: any FREESCOUT_<KEY>_FILE=/run/secrets/x is resolved into FREESCOUT_<KEY>=<contents> before passthrough.
+
       # - FREESCOUT_APP_SINCE_WITHOUT_QUOTES_ON_FETCHING=false
       # - FREESCOUT_APP_DEBUG=false
       - FREESCOUT_APP_LOCALE=en
@@ -59,15 +61,18 @@ services:
     volumes:
       - ./db:/data
     environment:
-      - ROOT_PASS=password
+      - TIMEZONE=America/Vancouver
+      - CONTAINER_NAME=freescout-db
+
+      - ROOT_PASS=rootpassword
       - DB_NAME=freescout
       - DB_USER=freescout
       - DB_PASS=freescoutpass
     restart: always
 
   freescout-db-backup:
-    container_name: freescout-db-backup
     image: docker.io/tiredofit/db-backup
+    container_name: freescout-db-backup
     volumes:
       - ./dbbackup:/backup
     environment:
@@ -76,7 +81,7 @@ services:
       - DB01_TYPE=mariadb
       - DB01_NAME=freescout
       - DB01_USER=freescout
-      - DB01_PASS=freescout
+      - DB01_PASS=freescoutpass
       - DB01_BACKUP_INTERVAL=1440
       - DB01_BACKUP_BEGIN=0000
       - DB01_CLEANUP_TIME=8640
