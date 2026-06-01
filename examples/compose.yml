@@ -7,7 +7,12 @@ services:
       - traefik.http.routers.freescout.rule=Host(`freescout.example.com`)
       - traefik.http.services.freescout.loadbalancer.server.port=80
     volumes:
+      ### If you want to perform customizations to the source and have access to it, then uncomment this line - This includes modules
+      #- ./data:/www/html
+      ### Or, if you just want to use Stock Freescout and hold onto persistent files like cache and session use this, one or the other.
       - ./data:/data
+      ### If you want to just keep the original source and add additional modules uncomment this line
+      #- ./modules:/www/html/Modules
       - ./logs:/logs
     environment:
       - CONTAINER_NAME=freescout-app
@@ -78,6 +83,7 @@ services:
     volumes:
       - ./dbbackup:/backup
     environment:
+      - CONTAINER_NAME=freescout-db-backup
       - DB01_HOST=freescout-db
       - DB01_TYPE=mariadb
       - DB01_NAME=freescout
