@@ -6,21 +6,36 @@
 source /container/base/functions/container/init
 prepare_service 41-freescout-scheduler
 SERVICE_NAME="freescout-scheduler"
-
 check_container_initialized
 check_service_initialized init 40-freescout
 liftoff
 
-if var_false "${ENABLE_FREESCOUT_SCHEDULER}"; then
-    s6-svc -d /var/run/s6/legacy-services/41-freescout-scheduler
-    exit 0
-fi
+_ts() { TZ="${TIMEZONE}" date +'%Y-%m-%d.%H:%M:%S'; }
 
-print_debug "FreeScout scheduler online - dispatching schedule:run every 60 seconds"
+_sleep_until_next_minute() {
+    local _secs=$(( 10#$(date +%S) ))
+    sleep $(( 60 - _secs ))
+}
+
+case "${SCHEDULER_LOG_TYPE,,}" in
+    file )
+        exec >> "${SCHEDULER_LOG_PATH%/}/${SCHEDULER_LOG_FILE}" 2>&1
+    ;;
+    none )
+        exec > /dev/null 2>&1
+    ;;
+    console | *)
+        exec > /proc/1/fd/1 2>&1
+    ;;
+esac
+
+print_debug "FreeScout scheduler online - dispatching schedule:run at top of each minute"
+_sleep_until_next_minute
 
 while true; do
-    silent sudo -u "${NGINX_USER}" \
-                    TZ="${TIMEZONE}" \
-                        php "${NGINX_WEBROOT%/}"/artisan schedule:run
-    sleep 60
+    echo "$(_ts) Scheduling Starting"
+    sudo -u "${NGINX_USER}" TZ="${TIMEZONE}" php "${NGINX_WEBROOT%/}"/artisan schedule:run | \
+        TZ="${TIMEZONE}" awk '{ print strftime("%Y-%m-%d.%H:%M:%S"), $0; fflush() }'
+    echo "$(_ts) Scheduling Finished"
+    _sleep_until_next_minute
 done

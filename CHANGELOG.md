@@ -1,3 +1,15 @@
+## 2.1.0 2026-06-06 <code at nfrastack dot com>
+
+   ### Added
+      - FreeScout 1.8.224
+      - New SCHEDULER_TYPE (cron|alt) routines for choosing which scheduler routines you wish to use
+      - SCHEDULER_LOG_TYPE (file|console|none) for tracking scheduler executions
+      - SCHEDULER_LOG_PATH and SCHEDULER_LOG_FILE environment variables
+
+   ### Changed
+      - Cleanup and optimize startup routines
+
+
 ## 2.0.8 2026-05-30 <code at nfrastack dot com>
 
    ### Added

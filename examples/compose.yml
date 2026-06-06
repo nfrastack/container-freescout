@@ -20,6 +20,7 @@ services:
       - DB_NAME=freescout
       - DB_USER=freescout
       - DB_PASS=freescoutpass
+      - SCHEDULER_TYPE=alt
       # - DB_SSL=TRUE
       # - FREESCOUT_DB_PGSQL_SSL_MODE=require    # only when DB_TYPE=pgsql
 

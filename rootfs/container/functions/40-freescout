@@ -12,7 +12,7 @@ freescout_compare_version() {
     _image_version=$(grep -o "ADD: FreeScout .* |" "/container/build/${IMAGE_NAME//\//_}/build.log" | awk '{print $3}')
     _version_file="${NGINX_WEBROOT%/}/${VERSION_FILE}"
     _data_version_file="${DATA_PATH%/}/${VERSION_FILE}"
-    _timestamp=$(TZ=${TIMEZONE} date +'%Y-%m-%d %H:%M:%S %Z')
+    _timestamp=$(TZ=${TIMEZONE} date +'%Y-%m-%d %H:%M:%S')
 
     if [ ! -f "${_version_file}" ] && [ ! -f "${_data_version_file}" ]; then
         echo "${_image_version} first installed on ${_timestamp}" \
@@ -46,16 +46,17 @@ freescout_compare_version() {
 }
 
 freescout_bootstrap_volatile_data() {
+    create_folder "${NGINX_WEBROOT}" "${NGINX_USER}":"${NGINX_GROUP}" 775
+
     if var_false "${ENABLE_STORAGE_REDIRECTION}"; then
         return
     fi
 
     create_folder "${DATA_PATH}" "${NGINX_USER}":"${NGINX_GROUP}" 750
     if [ ! -d "${MODULES_PATH%/}" ]; then
+        create_folder "${MODULES_PATH}" "${NGINX_USER}":"${NGINX_GROUP}" 775
         if [ -d "${NGINX_WEBROOT%/}"/Modules ]; then
-            cp -R "${NGINX_WEBROOT%/}"/Modules "${MODULES_PATH%/}"
-        else
-            create_folder "${MODULES_PATH}" "${NGINX_USER}":"${NGINX_GROUP}" 775
+            cp -R "${NGINX_WEBROOT%/}"/Modules/. "${MODULES_PATH%/}"/
         fi
     fi
     if [ ! -L "${NGINX_WEBROOT%/}"/Modules ]; then
@@ -121,25 +122,42 @@ freescout_create_admin() {
 }
 
 freescout_configure_scheduler() {
-    if var_false "${ENABLE_FREESCOUT_SCHEDULER}" ; then
-        service_stop 41-freescout-scheduler
-        s6-svc -d /var/run/s6/legacy-services/41-freescout-scheduler
-        echo "* * * * * sudo -u ${NGINX_USER} TZ=${TIMEZONE} php ${NGINX_WEBROOT}/artisan schedule:run >> /dev/null 2>&1" | write_file /container/cron/freescout-schedule
-    else
-        print_notice "Enabling alternative FreeScout scheduling routines"
-    fi
+    local _cron_output
+    local _scheduler_log_file
+
+    case "${SCHEDULER_LOG_TYPE,,}" in
+        file )
+            _scheduler_log_file="${SCHEDULER_LOG_PATH%/}/${SCHEDULER_LOG_FILE}"
+            if [ "${SCHEDULER_LOG_PATH%/}" != "/dev/null" ] && [ "${SCHEDULER_LOG_FILE}" != "/dev/null" ]; then
+                create_folder "${SCHEDULER_LOG_PATH}" "${NGINX_USER}":"${NGINX_GROUP}" 750
+                create_logrotate freescout-scheduler "${_scheduler_log_file}" none "${NGINX_USER}" "${NGINX_GROUP}"
+            fi
+            _cron_output="| sudo -u ${NGINX_USER} tee -a ${_scheduler_log_file} > /dev/null"
+        ;;
+        console )
+            _cron_output="> /proc/1/fd/1 2>&1"
+        ;;
+        none | *)
+            _cron_output="> /dev/null 2>&1"
+        ;;
+    esac
+
+    case "${SCHEDULER_TYPE,,}" in
+        alt* )
+            print_notice "[configure_scheduler] Using alternate scheduling routines"
+        ;;
+        cron | *)
+            print_debug "[configure_scheduler] Using cron based scheduling routines"
+            service_stop 41-freescout-scheduler
+            echo "* * * * * { echo \"\$(TZ=${TIMEZONE} date +'%Y-%m-%d.%H:%M:%S') Scheduling start\"; sudo -u ${NGINX_USER} TZ=${TIMEZONE} php ${NGINX_WEBROOT}/artisan schedule:run | TZ=${TIMEZONE} awk '{ print strftime(\"%Y-%m-%d %H:%M:%S\"), \$0; fflush() }'; echo \"\$(TZ=${TIMEZONE} date +'%Y-%m-%d.%H:%M:%S') Scheduling Finished\"; } ${_cron_output}" | write_file /container/cron/freescout-schedule
+        ;;
+    esac
 }
 
 freescout_install_modules() {
     if [ ! -d "${NGINX_WEBROOT%/}"/Modules ] || dir_empty "${NGINX_WEBROOT%/}"/Modules; then return; fi
     print_notice "Registering FreeScout modules"
-    if var_true "${MODULE_DEBUG}"; then
-        set -x ;
-    else
-        prefix=silent;
-    fi
-
-    ${prefix} /usr/bin/expect<<EOMODULES
+    silent /usr/bin/expect<<EOMODULES
 spawn sudo -u ${NGINX_USER} php ${NGINX_SITE_FREESCOUT_WEBROOT%/}/artisan freescout:module-install --no-ansi
 set timeout 30
 expect \
@@ -149,5 +167,4 @@ expect \
 #  timeout {puts "Putting you in control - to exit type \\ twice";interact \\\\}
 }
 EOMODULES
-    if var_true "${MODULE_DEBUG}"; then set +x ; fi
 }

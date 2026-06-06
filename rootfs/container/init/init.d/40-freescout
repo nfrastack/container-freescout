@@ -38,17 +38,13 @@ if [ "${SETUP_TYPE,,}" = "auto" ]; then
     custom_scripts
 
     freescout_install_modules
-
     laravel_env_passthrough
-
-    silent sudo -u "${NGINX_USER}" php "${NGINX_WEBROOT%/}"/artisan freescout:clear-cache
-    silent sudo -u "${NGINX_USER}" php "${NGINX_WEBROOT%/}"/artisan config:clear
-    silent sudo -u "${NGINX_USER}" php "${NGINX_WEBROOT%/}"/artisan storage:link
-    silent sudo -u "${NGINX_USER}" php "${NGINX_WEBROOT%/}"/artisan freescout:after-app-update
+    for artisan_command in freescout:clear-cache config:clear storage:link freescout:after-app-update; do
+        silent sudo -u "${NGINX_USER}" php "${NGINX_WEBROOT%/}"/artisan "${artisan_command}"
+    done
 else
     print_warn "SETUP_TYPE='${SETUP_TYPE}' - skipping config generation, migrations, admin bootstrap"
 fi
-
 
 print_info "Initialization Complete. Please visit ${APP_URL:-${SITE_URL}} and login with your credentials."
 

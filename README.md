@@ -198,11 +198,11 @@ docker compose up -d
 
 The following directories should be mapped for persistent storage. The `/data` mount is recommended - it covers config, sessions, cache, modules, and the version marker in one place. Mounting `/www/html` instead is supported when you want the FreeScout source tree exposed for inspection or self-update.
 
-| Directory   | Description                                                                    |
-| ----------- | ------------------------------------------------------------------------------ |
-| `/logs`     | Nginx and PHP log files                                                        |
-| `/www/html` | (Optional) Expose the FreeScout source tree to the host                        |
-| **OR**      |                                                                                |
+| Directory   | Description                                                            |
+| ----------- | ---------------------------------------------------------------------- |
+| `/logs`     | Nginx and PHP log files                                                |
+| `/www/html` | (Optional) Expose the FreeScout source tree to the host                |
+| **OR**      |                                                                        |
 | `/data`     | Persistent state - sessions, cache, uploads, `Modules/`, configuration |
 
 ## Configuration
@@ -239,7 +239,10 @@ Below is the complete list of available options that can be used to customize yo
 | `CONFIG_PATH`        | Config file (.env file redirection) lives here                                                                       | `${DATA_PATH}/config/` |         |
 | `CONFIG_FILE`        | Actual name of config file                                                                                           | `config`               |         |
 | `MODULES_PATH`       | Persistent storage for FreeScout `Modules/` directory                                                                | `${DATA_PATH}/Modules` |         |
-
+| `SCHEDULER_TYPE`     | Use upstream recommended `cron` routines or `alt` image routines                                                     | `cron`                 |         |
+| `SCHEDULER_LOG_TYPE` | Scheduler Log type `file` `console` `none`                                                                           | `file`                 |         |
+| `SCHEDULER_LOG_FILE` | Scheduler log file name                                                                                              | `scheduler.log`        |         |
+| `SCHEDULER_LOG_PATH` | Scheduelr log path                                                                                                   | `/logs/laravel/`               |         |
 
 #### Database
 
