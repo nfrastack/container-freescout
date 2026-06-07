@@ -7,11 +7,16 @@ services:
       - traefik.http.routers.freescout.rule=Host(`freescout.example.com`)
       - traefik.http.services.freescout.loadbalancer.server.port=80
     volumes:
+      ### Mount /data for persistent storage (config, sessions, cache, modules, uploads)
       - ./data:/data
+      ### Alternative: mount /www/html to expose the source tree for inspection/self-update
+      ### (requires ENABLE_CONFIG_REDIRECTION=FALSE and ENABLE_STORAGE_REDIRECTION=FALSE)
+      #- ./html:/www/html
       - ./logs:/logs
     environment:
       - CONTAINER_NAME=freescout-app
       - TIMEZONE=America/Vancouver
+
       - DEBUG_MODE=FALSE
 
       - DB_TYPE=mariadb
@@ -20,7 +25,8 @@ services:
       - DB_NAME=freescout
       - DB_USER=freescout
       - DB_PASS=freescoutpass
-      - SCHEDULER_TYPE=alt
+
+      #- SCHEDULER_TYPE=alt
       # - DB_SSL=TRUE
       # - FREESCOUT_DB_PGSQL_SSL_MODE=require    # only when DB_TYPE=pgsql
 

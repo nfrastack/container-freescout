@@ -5,12 +5,11 @@ services:
     ports:
       - 80:80
     volumes:
-    ### If you want to perform customizations to the source and have access to it, then uncomment this line - This includes modules
-    #- ./data:/www/html
-    ### Or, if you just want to use Stock Freescout and hold onto persistent files like cache and session use this, one or the other.
+    ### Mount /data for persistent storage (config, sessions, cache, modules, uploads)
     - ./data:/data
-    ### If you want to just keep the original source and add additional modules uncomment this line
-    #- ./modules:/www/html/Modules
+    ### Alternative: mount /www/html to expose the source tree for inspection/self-update
+    ### (requires ENABLE_CONFIG_REDIRECTION=FALSE and ENABLE_STORAGE_REDIRECTION=FALSE)
+    # - ./html:/www/html
     - ./logs/:/logs
     environment:
       - CONTAINER_NAME=freescout-app
