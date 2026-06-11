@@ -1,6 +1,6 @@
 services:
   freescout-app:
-    image: docker.io/nfrastack/freescout:2.0
+    image: docker.io/nfrastack/freescout
     container_name: freescout-app
     ports:
       - 80:80
@@ -12,8 +12,8 @@ services:
     # - ./html:/www/html
     - ./logs/:/logs
     environment:
-      - CONTAINER_NAME=freescout-app
       - TIMEZONE=America/Vancouver
+      - CONTAINER_NAME=freescout-app
 
       - DB_TYPE=mariadb
       - DB_HOST=freescout-db
@@ -29,7 +29,7 @@ services:
       - ADMIN_LAST_NAME=Admin           #
       - ADMIN_PASS=freescout            #
 
-      - SITE_URL=https://freescout.example.com # Required
+      - APP_URL=https://freescout.example.com # Required
 
       # All other FreeScout `.env` config goes through FREESCOUT_ prefix
       #
@@ -58,6 +58,7 @@ services:
     volumes:
       - ./db:/data
     environment:
+      - TIMEZONE=America/Vancouver
       - ROOT_PASS=password
       - DB_NAME=freescout
       - DB_USER=freescout
@@ -70,6 +71,7 @@ services:
     volumes:
       - ./dbbackup:/backup
     environment:
+      - TIMEZONE=America/Vancouver
       - CONTAINER_NAME=freescout-db-backup
       - DB01_HOST=freescout-db
       - DB01_TYPE=mariadb

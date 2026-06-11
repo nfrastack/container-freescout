@@ -79,15 +79,19 @@ freescout_bootstrap_volatile_data() {
 
 freescout_configure_app() {
     if [ -z "${APP_URL}" ] && [ -n "${SITE_URL}" ]; then
+        print_warn "SITE_URL is deprecated; please set APP_URL instead. Migrating SITE_URL to APP_URL."
         APP_URL="${SITE_URL}"
     fi
-    sanity_var APP_URL "APP_URL or SITE_URL (full external URL of the site eg https://freescout.example.com)"
+
+    sanity_var APP_URL "full external URL of the site eg https://freescout.example.com)"
     laravel_env_update APP_URL "${APP_URL}"
 
     case "${APP_URL,,}" in
         http://*)  laravel_env_update SESSION_SECURE_COOKIE false ;;
         https://*) laravel_env_update SESSION_SECURE_COOKIE true ;;
     esac
+
+    sed -i "s|server_name .*;|server_name $(echo "${APP_URL}" | sed 's|http.*//||g');|g" /etc/nginx/sites.enabled/freescout/server-begin/09-server_name.conf
 
     local _app_host
     _app_host=$(echo "${APP_URL}" | sed -nE 's|^https?://([^/:]+).*|\1|p')

@@ -29,7 +29,8 @@ services:
       #- SCHEDULER_TYPE=alt
       # - DB_SSL=TRUE
       # - FREESCOUT_DB_PGSQL_SSL_MODE=require    # only when DB_TYPE=pgsql
-
+      - NGINX_SITE_FREESCOUT_SERVER_NAME=[env:APP_URL]
+      #- NGINX_SITE_FREESCOUT_FASTCGI01_PARAM=SERVER_NAME,$$host
       - ADMIN_EMAIL=admin@example.com   # Only required for fresh DB
       - ADMIN_FIRST_NAME=FreeScout      #
       - ADMIN_LAST_NAME=Admin           #

@@ -1,3 +1,15 @@
+## 2.1.1 2026-06-11 <code at nfrastack dot com>
+
+If you are still using SITE_URL please switch to APP_URL as the variable name is being deprecated and new features only work against APP_URL
+
+   ### Changed
+      - Add warning for SITE_URL usage and refer to using APP_URL
+      - Change Nginx webserver vhost configuration to the value of APP_URL
+
+   ### Reverted
+      - SITE_URL
+
+
 ## 2.1.0 2026-06-06 <code at nfrastack dot com>
 
    ### Added
