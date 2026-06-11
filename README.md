@@ -155,7 +155,7 @@ These continue to work without a prefix:
 | `DB_USER`            | Unchanged                                          |
 | `DB_PASS`            | Unchanged                                          |
 | `DB_SSL`             | Unchanged                                          |
-| `SITE_URL`           | Unchanged or use `APP_URL`                         |
+|                      |
 
 #### Variables that now require the `FREESCOUT_` prefix
 
@@ -170,6 +170,7 @@ If you had any of the following set in 1.x, add `FREESCOUT_` in front of them, t
 | `APP_X_FRAME_OPTIONS`                  | `FREESCOUT_APP_X_FRAME_OPTIONS`                  |
 | `DB_PGSQL_SSL_MODE`                    | `FREESCOUT_DB_PGSQL_SSL_MODE`                    |
 | `DISPLAY_ERRORS`                       | `FREESCOUT_APP_DEBUG`                            |
+| `SITE_URL`                             | `APP_URL`                                        |
 
 #### Variables that have been removed
 
@@ -259,11 +260,9 @@ Below is the complete list of available options that can be used to customize yo
 
 #### Application
 
-| Parameter  | Description                                                                     | Default | `_FILE` |
-| ---------- | ------------------------------------------------------------------------------- | ------- | ------- |
-| `APP_URL`  | Full external URL of the site (e.g. `https://freescout.example.com`). Required. |         |         |
-| or         |                                                                                 |         |         |
-| `SITE_URL` | alias for `APP_URL`                                                             |         |         |
+| Parameter | Description                                                                     | Default | `_FILE` |
+| --------- | ------------------------------------------------------------------------------- | ------- | ------- |
+| `APP_URL` | Full external URL of the site (e.g. `https://freescout.example.com`). Required. |         |         |
 
 #### Setting FreeScout configuration
 
