@@ -1,3 +1,9 @@
+## 2.1.2 2026-06-13 <code at nfrastack dot com>
+
+   ### Added
+      - FreeScout 1.8.225
+
+
 ## 2.1.1 2026-06-11 <code at nfrastack dot com>
 
 If you are still using SITE_URL please switch to APP_URL as the variable name is being deprecated and new features only work against APP_URL
