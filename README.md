@@ -301,16 +301,24 @@ DB_PGSQL_SSL_MODE=require
 >
 > Docker secrets: any `FREESCOUT_<KEY>_FILE=/run/secrets/x` is resolved into `FREESCOUT_<KEY>=<contents>` before passthrough.
 
-#### Scheduler
+#### Scheduler & Queue Worker
 
-FreeScout requires `php artisan schedule:run` to fire once per minute for mail fetching, queue dispatching, and report digests. There is alternative to the in place cron service. Most people will not want this enabled. It is here for edge cases.
+FreeScout requires `php artisan schedule:run` to fire once per minute for mail fetching, queue dispatching, and report digests. There are two methods, `cron` or `service`.
 
-| Parameter            | Description                                                      | Default          |
-| -------------------- | ---------------------------------------------------------------- | ---------------- |
-| `SCHEDULER_TYPE`     | Use upstream recommended `cron` routines or `alt` image routines | `cron`           |
-| `SCHEDULER_LOG_TYPE` | Scheduler Log type `file` `console` `none`                       | `file`           |
-| `SCHEDULER_LOG_FILE` | Scheduler log file name                                          | `scheduler.log`  |
-| `SCHEDULER_LOG_PATH` | Scheduelr log path                                               | `/logs/laravel/` |
+- Under `cron` it relies on busybox cron timers to execute once per minuter
+- Under `service` it relies on two container services:
+  -  `freescout-worker` - a persistent `queue:work` daemon that processes queued jobs (email sending, etc.).
+  -  `freescout-scheduler` - fires `schedule:run --no-interaction` every minute.
+
+| Parameter            | Description                                                | Default                 |
+| -------------------- | ---------------------------------------------------------- | ----------------------- |
+| `SCHEDULER_TYPE`     | `service` (S6 loop) or `cron` (crontab). `alt` is an alias | `service`               |
+| `SCHEDULER_LOG_TYPE` | Scheduler log type `file` `console` `none`                 | `file`                  |
+| `SCHEDULER_LOG_PATH` | Scheduler log path                                         | `${LOG_PATH}`           |
+| `SCHEDULER_LOG_FILE` | Scheduler log file name                                    | `scheduler.log`         |
+| `WORKER_LOG_PATH`    | Worker log path                                            | `${LOG_PATH}`           |
+| `WORKER_LOG_TYPE`    | Worker log type                                            | `${SCHEDULER_LOG_TYPE}` |
+| `WORKER_LOG_FILE`    | Worker log file name                                       | `queue-worker.log`      |
 
 
 ### Networking

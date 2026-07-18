@@ -26,11 +26,6 @@ services:
       - DB_USER=freescout
       - DB_PASS=freescoutpass
 
-      #- SCHEDULER_TYPE=alt
-      # - DB_SSL=TRUE
-      # - FREESCOUT_DB_PGSQL_SSL_MODE=require    # only when DB_TYPE=pgsql
-      - NGINX_SITE_FREESCOUT_SERVER_NAME=[env:APP_URL]
-      #- NGINX_SITE_FREESCOUT_FASTCGI01_PARAM=SERVER_NAME,$$host
       - ADMIN_EMAIL=admin@example.com   # Only required for fresh DB
       - ADMIN_FIRST_NAME=FreeScout      #
       - ADMIN_LAST_NAME=Admin           #
@@ -38,17 +33,18 @@ services:
 
       - APP_URL=https://freescout.example.com # Required!
 
-      # All other FreeScout `.env` config goes through FREESCOUT_ prefix
-      #
-      # Use these values to remove an in place config value
-      #   FREESCOUT_FOO=unset    FREESCOUT_FOO=null    FREESCOUT_FOO=
-      #
-      # Docker secrets: any FREESCOUT_<KEY>_FILE=/run/secrets/x is resolved into FREESCOUT_<KEY>=<contents> before passthrough.
+      #- SCHEDULER_TYPE=service
 
-      # - FREESCOUT_APP_SINCE_WITHOUT_QUOTES_ON_FETCHING=false
+      ### All other FreeScout `.env` config goes through FREESCOUT_ prefix
+      ###
+      ### Use these values to remove an in place config value
+      ###   FREESCOUT_FOO=unset    FREESCOUT_FOO=null    FREESCOUT_FOO=
+      ###
+      ### Docker secrets: any FREESCOUT_<KEY>_FILE=/run/secrets/x is resolved into FREESCOUT_<KEY>=<contents> before passthrough.
+
       # - FREESCOUT_APP_DEBUG=false
       - FREESCOUT_APP_LOCALE=en
-      - FREESCOUT_APP_TIMEZONE=America/Vancouver
+      # - FREESCOUT_APP_SINCE_WITHOUT_QUOTES_ON_FETCHING=false
 
       - FREESCOUT_MAIL_DRIVER=smtp
       - FREESCOUT_MAIL_HOST=postfix-relay
@@ -70,7 +66,6 @@ services:
       - ./db:/data
     environment:
       - TIMEZONE=America/Vancouver
-      - CONTAINER_NAME=freescout-db
 
       - ROOT_PASS=rootpassword
       - DB_NAME=freescout

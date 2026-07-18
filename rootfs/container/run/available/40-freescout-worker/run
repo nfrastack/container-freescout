@@ -10,9 +10,9 @@ check_container_initialized
 check_service_initialized init 40-freescout
 liftoff
 
-case "${SCHEDULER_LOG_TYPE,,}" in
+exec s6-setuidgid "${NGINX_USER}" /command/with-contenv bash << ENDSCRIPT
+case "${WORKER_LOG_TYPE:-${SCHEDULER_LOG_TYPE}}" in
     file )
-        sudo -u "${NGINX_USER}" touch "${WORKER_LOG_PATH%/}/${WORKER_LOG_FILE}" 2>/dev/null
         exec >> "${WORKER_LOG_PATH%/}/${WORKER_LOG_FILE}" 2>&1
     ;;
     none )
@@ -22,14 +22,5 @@ case "${SCHEDULER_LOG_TYPE,,}" in
         exec > /proc/1/fd/1 2>&1
     ;;
 esac
-
-print_debug "FreeScout queue worker online - processing queues"
-
-exec sudo -u "${NGINX_USER}" \
-    TZ="${TIMEZONE}" \
-    php "${NGINX_WEBROOT%/}"/artisan \
-        queue:work \
-            --queue='emails,default' \
-            --sleep=5 \
-            --tries=1 \
-            --timeout=1800
+exec env TZ="${TIMEZONE}" php "${NGINX_WEBROOT%/}/artisan" queue:work --queue='emails,default' --sleep=5 --tries=1 --timeout=1800
+ENDSCRIPT

@@ -101,6 +101,7 @@ freescout_configure_app() {
         laravel_env_update APP_TRUSTED_HOSTS "localhost,127.0.0.1"
     fi
 
+    laravel_env_update APP_LOG single
     laravel_env_update APP_DISABLE_UPDATING true
     laravel_env_update APP_TIMEZONE "${TIMEZONE}"
 }
@@ -146,14 +147,23 @@ freescout_configure_scheduler() {
         ;;
     esac
 
+    case "${WORKER_LOG_TYPE:-${SCHEDULER_LOG_TYPE}}" in
+        file )
+            if [ "${WORKER_LOG_PATH%/}" != "/dev/null" ] && [ "${WORKER_LOG_FILE}" != "/dev/null" ]; then
+                create_folder "${WORKER_LOG_PATH}" "${NGINX_USER}":"${NGINX_GROUP}" 750
+                create_logrotate freescout-worker "${WORKER_LOG_PATH%/}/${WORKER_LOG_FILE}" none "${NGINX_USER}" "${NGINX_GROUP}"
+            fi
+        ;;
+    esac
+
     case "${SCHEDULER_TYPE,,}" in
-        alt* )
-            print_notice "[configure_scheduler] Using alternate scheduling routines"
+        alt* | service* )
+            print_notice "[configure_scheduler] Using service-based scheduling routines"
         ;;
         cron | *)
             print_debug "[configure_scheduler] Using cron based scheduling routines"
             service_stop 41-freescout-scheduler
-            echo "* * * * * { echo \"\$(TZ=${TIMEZONE} date +'%Y-%m-%d.%H:%M:%S') Scheduling start\"; sudo -u ${NGINX_USER} TZ=${TIMEZONE} php ${NGINX_WEBROOT}/artisan schedule:run | TZ=${TIMEZONE} awk '{ print strftime(\"%Y-%m-%d %H:%M:%S\"), \$0; fflush() }'; echo \"\$(TZ=${TIMEZONE} date +'%Y-%m-%d.%H:%M:%S') Scheduling Finished\"; } ${_cron_output}" | write_file /container/cron/freescout-schedule
+            echo "* * * * * { echo \"\$(TZ=${TIMEZONE} date +'%Y-%m-%d.%H:%M:%S') Scheduling start\"; sudo -u ${NGINX_USER} TZ=${TIMEZONE} php ${NGINX_WEBROOT}/artisan schedule:run --no-interaction; echo \"\$(TZ=${TIMEZONE} date +'%Y-%m-%d.%H:%M:%S') Scheduling Finished\"; } ${_cron_output}" | write_file /container/cron/freescout-schedule
         ;;
     esac
 }

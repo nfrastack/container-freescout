@@ -83,6 +83,7 @@ RUN echo "" && \
     php-ext enable core && \
     \
     clone_git_repo "${FREESCOUT_REPO_URL}" "${FREESCOUT_VERSION}" "${LARAVEL_INSTALL_DATA_PATH}"/install && \
+    sed -i "s/env('APP_LOG', 'daily')/env('APP_LOG', 'single')/" "${LARAVEL_INSTALL_DATA_PATH}"/install/config/app.php && \
     cd "${LARAVEL_INSTALL_DATA_PATH}"/install && \
     build_assets /build-assets/src "${LARAVEL_INSTALL_DATA_PATH}"/install && \
     build_assets scripts && \

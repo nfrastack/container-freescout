@@ -1,8 +1,15 @@
+## 2.2.0b 2026-07-18 <code at nfrastack dot com>
+
+   ### Changed
+      - Rework scheduler to not block on FreeScout's internal queue:work daemon
+      - Introduce SCHEDULER_TYPE=service (default)
+      - Set APP_LOG=single by default in source to let container logrotate work
+
+
 ## 2.1.5 2026-07-18 <code at nfrastack dot com>
 
    ### Added
       - FreeScout 1.8.230
-
 
 ## 2.1.4 2026-07-10 <code at nfrastack dot com>
 

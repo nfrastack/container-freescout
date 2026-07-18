@@ -40,7 +40,7 @@ if [ "${SETUP_TYPE,,}" = "auto" ]; then
     freescout_install_modules
     laravel_env_passthrough
     for artisan_command in freescout:clear-cache config:clear storage:link freescout:after-app-update; do
-        silent sudo -u "${NGINX_USER}" php "${NGINX_WEBROOT%/}"/artisan "${artisan_command}"
+        silent sudo -u "${NGINX_USER}" php "${NGINX_WEBROOT%/}"/artisan "${artisan_command}" --no-interaction
     done
 else
     print_warn "SETUP_TYPE='${SETUP_TYPE}' - skipping config generation, migrations, admin bootstrap"
