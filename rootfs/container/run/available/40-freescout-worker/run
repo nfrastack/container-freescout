@@ -1,0 +1,35 @@
+#!/command/with-contenv bash
+# SPDX-FileCopyrightText: © 2026 Nfrastack <code@nfrastack.com>
+#
+# SPDX-License-Identifier: MIT
+
+source /container/base/functions/container/init
+prepare_service 40-freescout-worker
+SERVICE_NAME="freescout-worker"
+check_container_initialized
+check_service_initialized init 40-freescout
+liftoff
+
+case "${SCHEDULER_LOG_TYPE,,}" in
+    file )
+        sudo -u "${NGINX_USER}" touch "${WORKER_LOG_PATH%/}/${WORKER_LOG_FILE}" 2>/dev/null
+        exec >> "${WORKER_LOG_PATH%/}/${WORKER_LOG_FILE}" 2>&1
+    ;;
+    none )
+        exec > /dev/null 2>&1
+    ;;
+    console | *)
+        exec > /proc/1/fd/1 2>&1
+    ;;
+esac
+
+print_debug "FreeScout queue worker online - processing queues"
+
+exec sudo -u "${NGINX_USER}" \
+    TZ="${TIMEZONE}" \
+    php "${NGINX_WEBROOT%/}"/artisan \
+        queue:work \
+            --queue='emails,default' \
+            --sleep=5 \
+            --tries=1 \
+            --timeout=1800
