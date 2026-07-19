@@ -1,4 +1,4 @@
-## 2.2.0b 2026-07-18 <code at nfrastack dot com>
+## 2.2.0 2026-07-19 <code at nfrastack dot com>
 
    ### Changed
       - Rework scheduler to not block on FreeScout's internal queue:work daemon

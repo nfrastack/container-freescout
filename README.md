@@ -46,22 +46,14 @@ docker.io/nfrastack/freescout:(image_tag)
 
 Image tag syntax is:
 
-`<image>:<optional tag>-<optional phpversion>`
+`<image>:<optional tag>`
 
 Example:
 
-`docker.io/nfrastack/freescout:latest` or `ghcr.io/nfrastack/container-freescout:2.0-php84`
+`docker.io/nfrastack/freescout:latest` or `ghcr.io/nfrastack/container-freescout:2.2.0`
 
 * `latest` will be the most recent commit on the latest PHP version
 * An optional `tag` may exist that matches the [CHANGELOG](CHANGELOG.md) - these are the safest
-
-
-| PHP version | Tag                      |
-| ----------- | ------------------------ |
-| 8.5.x       | `:<imageversion>-php8.5` |
-| 8.4.x       | `:<imageversion>-php8.4` |
-|             | `:latest`                |
-| 8.3.x       | `:<imageversion>-php8.3` |
 
 Have a look at the container registries and see what tags are available.
 
@@ -307,8 +299,8 @@ FreeScout requires `php artisan schedule:run` to fire once per minute for mail f
 
 - Under `cron` it relies on busybox cron timers to execute once per minuter
 - Under `service` it relies on two container services:
-  -  `freescout-worker` - a persistent `queue:work` daemon that processes queued jobs (email sending, etc.).
-  -  `freescout-scheduler` - fires `schedule:run --no-interaction` every minute.
+  - `freescout-worker` - a persistent `queue:work` daemon that processes queued jobs (email sending, etc.).
+  - `freescout-scheduler` - fires `schedule:run --no-interaction` every minute.
 
 | Parameter            | Description                                                | Default                 |
 | -------------------- | ---------------------------------------------------------- | ----------------------- |
