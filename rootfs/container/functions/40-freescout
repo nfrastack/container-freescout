@@ -39,8 +39,8 @@ freescout_compare_version() {
     chown -R "${NGINX_USER}":"${NGINX_GROUP}" "${NGINX_WEBROOT}"
 
     cd "${NGINX_WEBROOT}"
-    silent sudo -u "${NGINX_USER}" php "${NGINX_WEBROOT%/}"/artisan migrate --no-interaction --force
-    silent sudo -u "${NGINX_USER}" php "${NGINX_WEBROOT%/}"/artisan freescout:after-app-update
+    silent sudo -H -u "${NGINX_USER}" php "${NGINX_WEBROOT%/}"/artisan migrate --no-interaction --force
+    silent sudo -H -u "${NGINX_USER}" php "${NGINX_WEBROOT%/}"/artisan freescout:after-app-update
 
     sed -i --follow-symlinks "1i ${_image_version} upgraded on ${_timestamp}" "${_version_file}"
 }
@@ -117,7 +117,7 @@ freescout_create_admin() {
     sanity_var ADMIN_PASS  "Admin Password"
 
     print_notice "Creating FreeScout administrative user '${ADMIN_EMAIL}'"
-    silent sudo -u "${NGINX_USER}" php "${NGINX_WEBROOT%/}"/artisan \
+    silent sudo -H -u "${NGINX_USER}" php "${NGINX_WEBROOT%/}"/artisan \
                                                                 -n freescout:create-user \
                                                                     --role=admin \
                                                                     --firstName="${ADMIN_FIRST_NAME}" \
@@ -137,7 +137,7 @@ freescout_configure_scheduler() {
                 create_folder "${SCHEDULER_LOG_PATH}" "${NGINX_USER}":"${NGINX_GROUP}" 750
                 create_logrotate freescout-scheduler "${_scheduler_log_file}" none "${NGINX_USER}" "${NGINX_GROUP}"
             fi
-            _cron_output="| sudo -u ${NGINX_USER} tee -a ${_scheduler_log_file} > /dev/null"
+            _cron_output="| sudo -H -u ${NGINX_USER} tee -a ${_scheduler_log_file} > /dev/null"
         ;;
         console )
             _cron_output="> /proc/1/fd/1 2>&1"
@@ -163,7 +163,7 @@ freescout_configure_scheduler() {
         cron | *)
             print_debug "[configure_scheduler] Using cron based scheduling routines"
             service_stop 41-freescout-scheduler
-            echo "* * * * * { echo \"\$(TZ=${TIMEZONE} date +'%Y-%m-%d.%H:%M:%S') Scheduling start\"; sudo -u ${NGINX_USER} TZ=${TIMEZONE} php ${NGINX_WEBROOT}/artisan schedule:run --no-interaction; echo \"\$(TZ=${TIMEZONE} date +'%Y-%m-%d.%H:%M:%S') Scheduling Finished\"; } ${_cron_output}" | write_file /container/cron/freescout-schedule
+            echo "* * * * * { echo \"\$(TZ=${TIMEZONE} date +'%Y-%m-%d.%H:%M:%S') Scheduling start\"; sudo -H -u ${NGINX_USER} TZ=${TIMEZONE} php ${NGINX_WEBROOT}/artisan schedule:run --no-interaction; echo \"\$(TZ=${TIMEZONE} date +'%Y-%m-%d.%H:%M:%S') Scheduling Finished\"; } ${_cron_output}" | write_file /container/cron/freescout-schedule
         ;;
     esac
 }
@@ -172,7 +172,7 @@ freescout_install_modules() {
     if [ ! -d "${NGINX_WEBROOT%/}"/Modules ] || dir_empty "${NGINX_WEBROOT%/}"/Modules; then return; fi
     print_notice "Registering FreeScout modules"
     silent /usr/bin/expect<<EOMODULES
-spawn sudo -u ${NGINX_USER} php ${NGINX_SITE_FREESCOUT_WEBROOT%/}/artisan freescout:module-install --no-ansi
+spawn sudo -H -u ${NGINX_USER} php ${NGINX_SITE_FREESCOUT_WEBROOT%/}/artisan freescout:module-install --no-ansi
 set timeout 30
 expect \
 {

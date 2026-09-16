@@ -20,14 +20,14 @@ if [ "${SETUP_TYPE,,}" = "auto" ]; then
 
     if laravel_db_is_populated; then
         print_info "DB schema present - running migrations only"
-        silent sudo -u "${NGINX_USER}" php "${NGINX_WEBROOT%/}"/artisan \
+        silent sudo -H -u "${NGINX_USER}" php "${NGINX_WEBROOT%/}"/artisan \
                                                                     migrate \
                                                                         --no-interaction \
                                                                         --force
     else
         print_warn "Empty database detected - migrating + creating admin user"
         sleep 2
-        silent sudo -u "${NGINX_USER}" php "${NGINX_WEBROOT%/}"/artisan \
+        silent sudo -H -u "${NGINX_USER}" php "${NGINX_WEBROOT%/}"/artisan \
                                                                     migrate \
                                                                         --no-interaction \
                                                                         --force
@@ -40,7 +40,7 @@ if [ "${SETUP_TYPE,,}" = "auto" ]; then
     freescout_install_modules
     laravel_env_passthrough
     for artisan_command in freescout:clear-cache config:clear storage:link freescout:after-app-update; do
-        silent sudo -u "${NGINX_USER}" php "${NGINX_WEBROOT%/}"/artisan "${artisan_command}" --no-interaction
+        silent sudo -H -u "${NGINX_USER}" php "${NGINX_WEBROOT%/}"/artisan "${artisan_command}" --no-interaction
     done
 else
     print_warn "SETUP_TYPE='${SETUP_TYPE}' - skipping config generation, migrations, admin bootstrap"
