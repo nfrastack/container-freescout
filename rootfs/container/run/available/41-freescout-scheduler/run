@@ -4,13 +4,13 @@
 # SPDX-License-Identifier: MIT
 
 source /container/base/functions/container/init
-prepare_service 41-freescout-scheduler
+prepare_service 30-laravel,40-freescout
 SERVICE_NAME="freescout-scheduler"
 check_container_initialized
 check_service_initialized init 40-freescout
 liftoff
 
-exec run_as "${NGINX_USER}" /command/with-contenv bash << ENDSCRIPT
+exec s6-setuidgid "${NGINX_USER}" env HOME="$(getent passwd "${NGINX_USER}" | cut -d: -f6)" /command/with-contenv bash << ENDSCRIPT
 case "${SCHEDULER_LOG_TYPE,,}" in
     file )
         exec >> "${SCHEDULER_LOG_PATH%/}/${SCHEDULER_LOG_FILE}" 2>&1
