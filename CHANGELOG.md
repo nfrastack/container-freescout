@@ -1,3 +1,10 @@
+## 2.2.12 2026-09-19 <code at nfrastack dot com>
+
+   ### Changed
+      - Fix 2.2.11 run_as issue
+      - Fix issue with scheduler and worker log files not being written to correct location
+
+
 ## 2.2.11 2026-09-18 <code at nfrastack dot com>
 
    ### Added
