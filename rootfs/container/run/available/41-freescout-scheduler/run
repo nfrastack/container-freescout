@@ -10,7 +10,7 @@ check_container_initialized
 check_service_initialized init 40-freescout
 liftoff
 
-exec s6-setuidgid "${NGINX_USER}" env HOME="$(getent passwd "${NGINX_USER}" | cut -d: -f6)" /command/with-contenv bash << ENDSCRIPT
+exec run_as "${NGINX_USER}" /command/with-contenv bash << ENDSCRIPT
 case "${SCHEDULER_LOG_TYPE,,}" in
     file )
         exec >> "${SCHEDULER_LOG_PATH%/}/${SCHEDULER_LOG_FILE}" 2>&1

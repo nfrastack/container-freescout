@@ -26,7 +26,7 @@ else
     _queues="emails,default"
 fi
 
-exec s6-setuidgid "${NGINX_USER}" env HOME="$(getent passwd "${NGINX_USER}" | cut -d: -f6)" /command/with-contenv bash << ENDSCRIPT
+exec run_as "${NGINX_USER}" /command/with-contenv bash << ENDSCRIPT
 case "${WORKER_LOG_TYPE:-${SCHEDULER_LOG_TYPE}}" in
     file )
         exec >> "${WORKER_LOG_PATH%/}/${WORKER_LOG_FILE}" 2>&1
