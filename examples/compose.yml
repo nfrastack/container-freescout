@@ -82,6 +82,9 @@ services:
       - ./dbbackup:/backup
     environment:
       - TIMEZONE=America/Vancouver
+      - CONTAINER_NAME=freescout-db-backup
+
+      - STATS_ENABLED=TRUE
 
       - DB01_HOST=freescout-db
       - DB01_TYPE=mariadb
