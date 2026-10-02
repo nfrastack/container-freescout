@@ -1,3 +1,9 @@
+## 2.2.15 2026-10-02 <code at nfrastack dot com>
+
+   ### Changed
+      - Strip newline from worker identifier routines
+
+
 ## 2.2.14 2026-09-27 <code at nfrastack dot com>
 
    ### Added
