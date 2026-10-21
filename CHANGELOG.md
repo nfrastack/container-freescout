@@ -1,3 +1,11 @@
+## 2.2.20 2026-10-21 <code at nfrastack dot com>
+
+EAll users should update immediately to limit known security issues that exist in images prior to this version.
+
+   ### Added
+      - Pin to nfrastack/laravel:1.0.8
+
+
 ## 2.2.19 2026-10-16 <code at nfrastack dot com>
 
    ### Added
