@@ -1,3 +1,9 @@
+## 2.2.22 2026-10-25 <code at nfrastack dot com>
+
+   ### Changed
+      - Execute clear cache regardless of SETUP_TYPE value on startup (credit tareko@github)
+
+
 ## 2.2.21 2026-10-21 <code at nfrastack dot com>
 
 All users should upgrade immedaitely to resolve known security issues with the PHP version
