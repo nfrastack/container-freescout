@@ -44,6 +44,17 @@ if [ "${SETUP_TYPE,,}" = "auto" ]; then
     done
 else
     print_warn "SETUP_TYPE='${SETUP_TYPE}' - skipping config generation, migrations, admin bootstrap"
+
+    # The image is built with `php artisan freescout:build`, which bakes the
+    # build-time default URL (http://localhost) into public/js/builds/vars.js.
+    # Manual installs never regenerate that file, so every AJAX call that uses
+    # laroute (reply send, attachment uploads, mark-as-read, ...) is posted to
+    # http://localhost instead of APP_URL and fails with "Error 0".
+    # Regenerate vars.js and drop the stale builds using the runtime APP_URL.
+    if [ -f "${NGINX_WEBROOT%/}/artisan" ] && [ -s "${NGINX_WEBROOT%/}/.env" ]; then
+        silent sudo -H -u "${NGINX_USER}" php "${NGINX_WEBROOT%/}"/artisan \
+            freescout:clear-cache --doNotCacheConfig --no-interaction
+    fi
 fi
 
 print_info "Initialization Complete. Please visit ${APP_URL:-${SITE_URL}} and login with your credentials."
