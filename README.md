@@ -46,22 +46,14 @@ docker.io/nfrastack/freescout:(image_tag)
 
 Image tag syntax is:
 
-`<image>:<optional tag>-<optional phpversion>`
+`<image>:<optional tag>`
 
 Example:
 
-`docker.io/nfrastack/freescout:latest` or `ghcr.io/nfrastack/container-freescout:2.0-php84`
+`docker.io/nfrastack/freescout:latest` or `ghcr.io/nfrastack/container-freescout:2.2.0`
 
 * `latest` will be the most recent commit on the latest PHP version
 * An optional `tag` may exist that matches the [CHANGELOG](CHANGELOG.md) - these are the safest
-
-
-| PHP version | Tag                      |
-| ----------- | ------------------------ |
-| 8.5.x       | `:<imageversion>-php8.5` |
-| 8.4.x       | `:<imageversion>-php8.4` |
-|             | `:latest`                |
-| 8.3.x       | `:<imageversion>-php8.3` |
 
 Have a look at the container registries and see what tags are available.
 
@@ -155,7 +147,7 @@ These continue to work without a prefix:
 | `DB_USER`            | Unchanged                                          |
 | `DB_PASS`            | Unchanged                                          |
 | `DB_SSL`             | Unchanged                                          |
-| `SITE_URL`           | Unchanged or use `APP_URL`                         |
+|                      |
 
 #### Variables that now require the `FREESCOUT_` prefix
 
@@ -163,13 +155,14 @@ If you had any of the following set in 1.x, add `FREESCOUT_` in front of them, t
 
 | Old (1.x)                              | New (2.x)                                        |
 | -------------------------------------- | ------------------------------------------------ |
-| `APPLICATION_NAME`                     | `FREESCOUT_APPLOCATION_NAME`                     |
+| `APPLICATION_NAME`                     | `FREESCOUT_APPLICATION_NAME`                     |
 | `APP_PROXY`                            | `FREESCOUT_APP_PROXY`                            |
 | `APP_TRUSTED_PROXIES`                  | `FREESCOUT_APP_TRUSTED_PROXIES`                  |
 | `APP_SINCE_WITHOUT_QUOTES_ON_FETCHING` | `FREESCOUT_APP_SINCE_WITHOUT_QUOTES_ON_FETCHING` |
 | `APP_X_FRAME_OPTIONS`                  | `FREESCOUT_APP_X_FRAME_OPTIONS`                  |
 | `DB_PGSQL_SSL_MODE`                    | `FREESCOUT_DB_PGSQL_SSL_MODE`                    |
 | `DISPLAY_ERRORS`                       | `FREESCOUT_APP_DEBUG`                            |
+| `SITE_URL`                             | `APP_URL`                                        |
 
 #### Variables that have been removed
 
@@ -196,14 +189,24 @@ docker compose up -d
 
 ### Persistent Storage
 
-The following directories should be mapped for persistent storage. The `/data` mount is recommended - it covers config, sessions, cache, modules, and the version marker in one place. Mounting `/www/html` instead is supported when you want the FreeScout source tree exposed for inspection or self-update.
+The following directories should be mapped for persistent storage. The `/data` mount is recommended - it covers config, sessions, cache, modules in one place. Mounting `/www/html` instead is supported when you want the FreeScout source tree exposed for inspection or self-update.
 
-| Directory   | Description                                                                    |
-| ----------- | ------------------------------------------------------------------------------ |
-| `/logs`     | Nginx and PHP log files                                                        |
-| `/www/html` | (Optional) Expose the FreeScout source tree to the host                        |
-| **OR**      |                                                                                |
+| Directory   | Description                                                            |
+| ----------- | ---------------------------------------------------------------------- |
+| `/logs`     | Nginx and PHP log files                                                |
+| **Choose**  |                                                                        |
 | `/data`     | Persistent state - sessions, cache, uploads, `Modules/`, configuration |
+| **OR**      |                                                                        |
+| `/www/html` | Expose the FreeScout source tree to the host                           |
+
+When mounting `/www/html` instead of `/data`, the container's config and storage redirections point at ephemeral paths by default. To keep everything under the webroot mount, add these environment variables:
+
+| Variable                     | Description                                               |
+| ---------------------------- | --------------------------------------------------------- |
+| `ENABLE_CONFIG_REDIRECTION`  | Set to `FALSE` to keep `.env` in `/www/html/.env`         |
+| `ENABLE_STORAGE_REDIRECTION` | Set to `FALSE` to keep `storage/` in `/www/html/storage/` |
+
+Without these, config, modules and uploaded files are lost on container restart.
 
 ## Configuration
 
@@ -239,27 +242,19 @@ Below is the complete list of available options that can be used to customize yo
 | `CONFIG_PATH`        | Config file (.env file redirection) lives here                                                                       | `${DATA_PATH}/config/` |         |
 | `CONFIG_FILE`        | Actual name of config file                                                                                           | `config`               |         |
 | `MODULES_PATH`       | Persistent storage for FreeScout `Modules/` directory                                                                | `${DATA_PATH}/Modules` |         |
-
-
-#### Database
-
-| Parameter | Description                                                  | Default | `_FILE` |
-| --------- | ------------------------------------------------------------ | ------- | ------- |
-| `DB_TYPE` | Database driver: `mysql`, `mariadb`, or `pgsql` / `postgres` | `mysql` |         |
-| `DB_HOST` | Hostname or container name of the database server            |         | x       |
-| `DB_PORT` | Database port                                                | `3306`  | x       |
-| `DB_NAME` | Database name (written to `.env` as `DB_DATABASE`)           |         | x       |
-| `DB_USER` | Database username (written to `.env` as `DB_USERNAME`)       |         | x       |
-| `DB_PASS` | Database password (written to `.env` as `DB_PASSWORD`)       |         | x       |
-| `DB_SSL`  | Enable SSL connectivity (`TRUE` / `FALSE`) for MySQL/MariaDB | `FALSE` |         |
+| `DB_TYPE`            | Database driver: `mysql`, `mariadb`, or `pgsql` / `postgres`                                                         | `mysql`                |         |
+| `DB_HOST`            | Hostname or container name of the database server                                                                    |                        | x       |
+| `DB_PORT`            | Database port                                                                                                        | `3306`                 | x       |
+| `DB_NAME`            | Database name (written to `.env` as `DB_DATABASE`)                                                                   |                        | x       |
+| `DB_USER`            | Database username (written to `.env` as `DB_USERNAME`)                                                               |                        | x       |
+| `DB_PASS`            | Database password (written to `.env` as `DB_PASSWORD`)                                                               |                        | x       |
+| `DB_SSL`             | Enable SSL connectivity (`TRUE` / `FALSE`) for MySQL/MariaDB                                                         | `FALSE`                |         |
 
 #### Application
 
-| Parameter  | Description                                                                     | Default | `_FILE` |
-| ---------- | ------------------------------------------------------------------------------- | ------- | ------- |
-| `APP_URL`  | Full external URL of the site (e.g. `https://freescout.example.com`). Required. |         |         |
-| or         |                                                                                 |         |         |
-| `SITE_URL` | alias for `APP_URL`                                                             |         |         |
+| Parameter | Description                                                                     | Default | `_FILE` |
+| --------- | ------------------------------------------------------------------------------- | ------- | ------- |
+| `APP_URL` | Full external URL of the site (e.g. `https://freescout.example.com`). Required. |         |         |
 
 #### Setting FreeScout configuration
 
@@ -298,13 +293,25 @@ DB_PGSQL_SSL_MODE=require
 >
 > Docker secrets: any `FREESCOUT_<KEY>_FILE=/run/secrets/x` is resolved into `FREESCOUT_<KEY>=<contents>` before passthrough.
 
-#### Scheduler
+#### Scheduler & Queue Worker
 
-FreeScout requires `php artisan schedule:run` to fire once per minute for mail fetching, queue dispatching, and report digests. This is an alternative to the in place cron service. Most people will not want this enabled. It is here for edge cases.
+FreeScout requires `php artisan schedule:run` to fire once per minute for mail fetching, queue dispatching, and report digests. There are two methods, `cron` or `service`.
 
-| Parameter                    | Description                        | Default |
-| ---------------------------- | ---------------------------------- | ------- |
-| `ENABLE_FREESCOUT_SCHEDULER` | Toggle the in-container scheduler. | `FALSE` |
+- Under `cron` it relies on busybox cron timers to execute once per minuter
+- Under `service` it relies on two container services:
+  - `freescout-worker` - a persistent `queue:work` daemon that processes queued jobs (email sending, etc.).
+  - `freescout-scheduler` - fires `schedule:run --no-interaction` every minute.
+
+| Parameter            | Description                                                | Default                 |
+| -------------------- | ---------------------------------------------------------- | ----------------------- |
+| `SCHEDULER_TYPE`     | `service` (S6 loop) or `cron` (crontab). `alt` is an alias | `service`               |
+| `SCHEDULER_LOG_TYPE` | Scheduler log type `file` `console` `none`                 | `file`                  |
+| `SCHEDULER_LOG_PATH` | Scheduler log path                                         | `${LOG_PATH}`           |
+| `SCHEDULER_LOG_FILE` | Scheduler log file name                                    | `scheduler.log`         |
+| `WORKER_LOG_PATH`    | Worker log path                                            | `${LOG_PATH}`           |
+| `WORKER_LOG_TYPE`    | Worker log type                                            | `${SCHEDULER_LOG_TYPE}` |
+| `WORKER_LOG_FILE`    | Worker log file name                                       | `queue-worker.log`      |
+
 
 ### Networking
 

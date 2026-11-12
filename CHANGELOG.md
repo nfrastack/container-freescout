@@ -1,3 +1,205 @@
+## 2.2.24 2026-11-07 <code at nfrastack dot com>
+
+   ### Changed
+      - FreeScout 1.8.250
+
+## 2.2.23 2026-10-31 <code at nfrastack dot com>
+
+   ### Changed
+      - FreeScout 1.8.249
+
+## 2.2.22 2026-10-25 <code at nfrastack dot com>
+
+   ### Changed
+      - Execute clear cache regardless of SETUP_TYPE value on startup (credit tareko@github)
+
+
+## 2.2.21 2026-10-21 <code at nfrastack dot com>
+
+All users should upgrade immedaitely to resolve known security issues with the PHP version
+
+   ### Added
+      - Pin to nfrastack/laravel:1.0.9
+
+
+## 2.2.20 2026-10-21 <code at nfrastack dot com>
+
+EAll users should update immediately to limit known security issues that exist in images prior to this version.
+
+   ### Added
+      - Pin to nfrastack/laravel:1.0.8
+
+
+## 2.2.19 2026-10-16 <code at nfrastack dot com>
+
+   ### Added
+      - FreeScout 1.8.248
+
+
+## 2.2.18 2026-10-10 <code at nfrastack dot com>
+
+   ### Added
+      - FreeScout 1.8.247
+
+
+## 2.2.17 2026-10-03 <code at nfrastack dot com>
+
+   ### Added
+      - FreeScout 1.8.245
+
+
+## 2.2.16 2026-10-03 <code at nfrastack dot com>
+
+   ### Added
+      - FreeScout 1.8.244
+
+
+## 2.2.15 2026-10-02 <code at nfrastack dot com>
+
+   ### Changed
+      - Strip newline from worker identifier routines
+
+
+## 2.2.14 2026-09-27 <code at nfrastack dot com>
+
+   ### Added
+      - FreeScout 1.8.243
+
+
+## 2.2.13 2026-09-25 <code at nfrastack dot com>
+
+   ### Added
+      - FreeScout 1.8.242
+
+
+## 2.2.12 2026-09-19 <code at nfrastack dot com>
+
+   ### Changed
+      - Fix 2.2.11 run_as issue
+      - Fix issue with scheduler and worker log files not being written to correct location
+
+
+## 2.2.11 2026-09-18 <code at nfrastack dot com>
+
+   ### Added
+      - FreeScout 1.8.241
+
+
+## 2.2.10 2026-09-11 <code at nfrastack dot com>
+
+   ### Added
+      - FreeScout 1.8.240
+
+
+## 2.2.9 2026-09-03 <code at nfrastack dot com>
+
+   ### Added
+      - FreeScout 1.8.239
+
+
+## 2.2.8 2026-08-30 <code at nfrastack dot com>
+
+   ### Added
+      - FreeScout 1.8.238
+
+
+## 2.2.7 2026-08-29 <code at nfrastack dot com>
+
+   ### Added
+      - FreeScout 1.8.237
+
+
+## 2.2.6 2026-08-23 <code at nfrastack dot com>
+
+   ### Added
+      - FreeScout 1.8.236
+
+
+## 2.2.5 2026-08-15 <code at nfrastack dot com>
+
+   ### Added
+      - FreeScout 1.8.235
+
+
+## 2.2.4 2026-08-14 <code at nfrastack dot com>
+
+   ### Added
+      - FreeScout 1.8.234
+
+
+## 2.2.3 2026-08-07 <code at nfrastack dot com>
+
+   ### Added
+      - FreeScout 1.8.233
+
+
+## 2.2.2 2026-07-31 <code at nfrastack dot com>
+
+   ### Added
+      - FreeScout 1.8.232
+
+
+## 2.2.1 2026-07-25 <code at nfrastack dot com>
+
+   ### Added
+      - FreeScout 1.8.231
+
+
+## 2.2.0 2026-07-19 <code at nfrastack dot com>
+
+   ### Changed
+      - Rework scheduler to not block on FreeScout's internal queue:work daemon
+      - Introduce SCHEDULER_TYPE=service (default)
+      - Set APP_LOG=single by default in source to let container logrotate work
+
+
+## 2.1.5 2026-07-18 <code at nfrastack dot com>
+
+   ### Added
+      - FreeScout 1.8.230
+
+## 2.1.4 2026-07-10 <code at nfrastack dot com>
+
+   ### Added
+      - FreeScout 1.8.229
+
+
+## 2.1.3 2026-06-27 <code at nfrastack dot com>
+
+   ### Added
+      - FreeScout 1.8.226
+
+
+## 2.1.2 2026-06-13 <code at nfrastack dot com>
+
+   ### Added
+      - FreeScout 1.8.225
+
+
+## 2.1.1 2026-06-11 <code at nfrastack dot com>
+
+If you are still using SITE_URL please switch to APP_URL as the variable name is being deprecated and new features only work against APP_URL
+
+   ### Changed
+      - Add warning for SITE_URL usage and refer to using APP_URL
+      - Change Nginx webserver vhost configuration to the value of APP_URL
+
+   ### Reverted
+      - SITE_URL
+
+
+## 2.1.0 2026-06-06 <code at nfrastack dot com>
+
+   ### Added
+      - FreeScout 1.8.224
+      - New SCHEDULER_TYPE (cron|alt) routines for choosing which scheduler routines you wish to use
+      - SCHEDULER_LOG_TYPE (file|console|none) for tracking scheduler executions
+      - SCHEDULER_LOG_PATH and SCHEDULER_LOG_FILE environment variables
+
+   ### Changed
+      - Cleanup and optimize startup routines
+
+
 ## 2.0.8 2026-05-30 <code at nfrastack dot com>
 
    ### Added

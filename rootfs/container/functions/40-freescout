@@ -39,23 +39,24 @@ freescout_compare_version() {
     chown -R "${NGINX_USER}":"${NGINX_GROUP}" "${NGINX_WEBROOT}"
 
     cd "${NGINX_WEBROOT}"
-    silent sudo -u "${NGINX_USER}" php "${NGINX_WEBROOT%/}"/artisan migrate --no-interaction --force
-    silent sudo -u "${NGINX_USER}" php "${NGINX_WEBROOT%/}"/artisan freescout:after-app-update
+    silent sudo -H -u "${NGINX_USER}" php "${NGINX_WEBROOT%/}"/artisan migrate --no-interaction --force
+    silent sudo -H -u "${NGINX_USER}" php "${NGINX_WEBROOT%/}"/artisan freescout:after-app-update
 
     sed -i --follow-symlinks "1i ${_image_version} upgraded on ${_timestamp}" "${_version_file}"
 }
 
 freescout_bootstrap_volatile_data() {
+    create_folder "${NGINX_WEBROOT}" "${NGINX_USER}":"${NGINX_GROUP}" 775
+
     if var_false "${ENABLE_STORAGE_REDIRECTION}"; then
         return
     fi
 
     create_folder "${DATA_PATH}" "${NGINX_USER}":"${NGINX_GROUP}" 750
     if [ ! -d "${MODULES_PATH%/}" ]; then
+        create_folder "${MODULES_PATH}" "${NGINX_USER}":"${NGINX_GROUP}" 775
         if [ -d "${NGINX_WEBROOT%/}"/Modules ]; then
-            cp -R "${NGINX_WEBROOT%/}"/Modules "${MODULES_PATH%/}"
-        else
-            create_folder "${MODULES_PATH}" "${NGINX_USER}":"${NGINX_GROUP}" 775
+            cp -R "${NGINX_WEBROOT%/}"/Modules/. "${MODULES_PATH%/}"/
         fi
     fi
     if [ ! -L "${NGINX_WEBROOT%/}"/Modules ]; then
@@ -78,15 +79,19 @@ freescout_bootstrap_volatile_data() {
 
 freescout_configure_app() {
     if [ -z "${APP_URL}" ] && [ -n "${SITE_URL}" ]; then
+        print_warn "SITE_URL is deprecated; please set APP_URL instead. Migrating SITE_URL to APP_URL."
         APP_URL="${SITE_URL}"
     fi
-    sanity_var APP_URL "APP_URL or SITE_URL (full external URL of the site eg https://freescout.example.com)"
+
+    sanity_var APP_URL "full external URL of the site eg https://freescout.example.com)"
     laravel_env_update APP_URL "${APP_URL}"
 
     case "${APP_URL,,}" in
         http://*)  laravel_env_update SESSION_SECURE_COOKIE false ;;
         https://*) laravel_env_update SESSION_SECURE_COOKIE true ;;
     esac
+
+    sed -i "s|server_name .*;|server_name $(echo "${APP_URL}" | sed 's|http.*//||g');|g" /etc/nginx/sites.enabled/freescout/server-begin/09-server_name.conf
 
     local _app_host
     _app_host=$(echo "${APP_URL}" | sed -nE 's|^https?://([^/:]+).*|\1|p')
@@ -96,6 +101,7 @@ freescout_configure_app() {
         laravel_env_update APP_TRUSTED_HOSTS "localhost,127.0.0.1"
     fi
 
+    laravel_env_update APP_LOG single
     laravel_env_update APP_DISABLE_UPDATING true
     laravel_env_update APP_TIMEZONE "${TIMEZONE}"
 }
@@ -111,7 +117,7 @@ freescout_create_admin() {
     sanity_var ADMIN_PASS  "Admin Password"
 
     print_notice "Creating FreeScout administrative user '${ADMIN_EMAIL}'"
-    silent sudo -u "${NGINX_USER}" php "${NGINX_WEBROOT%/}"/artisan \
+    silent sudo -H -u "${NGINX_USER}" php "${NGINX_WEBROOT%/}"/artisan \
                                                                 -n freescout:create-user \
                                                                     --role=admin \
                                                                     --firstName="${ADMIN_FIRST_NAME}" \
@@ -121,26 +127,52 @@ freescout_create_admin() {
 }
 
 freescout_configure_scheduler() {
-    if var_false "${ENABLE_FREESCOUT_SCHEDULER}" ; then
-        service_stop 41-freescout-scheduler
-        s6-svc -d /var/run/s6/legacy-services/41-freescout-scheduler
-        echo "* * * * * sudo -u ${NGINX_USER} TZ=${TIMEZONE} php ${NGINX_WEBROOT}/artisan schedule:run >> /dev/null 2>&1" | write_file /container/cron/freescout-schedule
-    else
-        print_notice "Enabling alternative FreeScout scheduling routines"
-    fi
+    local _cron_output
+    local _scheduler_log_file
+
+    case "${SCHEDULER_LOG_TYPE,,}" in
+        file )
+            _scheduler_log_file="${SCHEDULER_LOG_PATH%/}/${SCHEDULER_LOG_FILE}"
+            if [ "${SCHEDULER_LOG_PATH%/}" != "/dev/null" ] && [ "${SCHEDULER_LOG_FILE}" != "/dev/null" ]; then
+                create_folder "${SCHEDULER_LOG_PATH}" "${NGINX_USER}":"${NGINX_GROUP}" 750
+                create_logrotate freescout-scheduler "${_scheduler_log_file}" none "${NGINX_USER}" "${NGINX_GROUP}"
+            fi
+            _cron_output="| sudo -H -u ${NGINX_USER} tee -a ${_scheduler_log_file} > /dev/null"
+        ;;
+        console )
+            _cron_output="> /proc/1/fd/1 2>&1"
+        ;;
+        none | *)
+            _cron_output="> /dev/null 2>&1"
+        ;;
+    esac
+
+    case "${WORKER_LOG_TYPE:-${SCHEDULER_LOG_TYPE}}" in
+        file )
+            if [ "${WORKER_LOG_PATH%/}" != "/dev/null" ] && [ "${WORKER_LOG_FILE}" != "/dev/null" ]; then
+                create_folder "${WORKER_LOG_PATH}" "${NGINX_USER}":"${NGINX_GROUP}" 750
+                create_logrotate freescout-worker "${WORKER_LOG_PATH%/}/${WORKER_LOG_FILE}" none "${NGINX_USER}" "${NGINX_GROUP}"
+            fi
+        ;;
+    esac
+
+    case "${SCHEDULER_TYPE,,}" in
+        alt* | service* )
+            print_notice "[configure_scheduler] Using service-based scheduling routines"
+        ;;
+        cron | *)
+            print_debug "[configure_scheduler] Using cron based scheduling routines"
+            service_stop 41-freescout-scheduler
+            echo "* * * * * { echo \"\$(TZ=${TIMEZONE} date +'%Y-%m-%d.%H:%M:%S') Scheduling start\"; sudo -H -u ${NGINX_USER} TZ=${TIMEZONE} php ${NGINX_WEBROOT}/artisan schedule:run --no-interaction; echo \"\$(TZ=${TIMEZONE} date +'%Y-%m-%d.%H:%M:%S') Scheduling Finished\"; } ${_cron_output}" | write_file /container/cron/freescout-schedule
+        ;;
+    esac
 }
 
 freescout_install_modules() {
     if [ ! -d "${NGINX_WEBROOT%/}"/Modules ] || dir_empty "${NGINX_WEBROOT%/}"/Modules; then return; fi
     print_notice "Registering FreeScout modules"
-    if var_true "${MODULE_DEBUG}"; then
-        set -x ;
-    else
-        prefix=silent;
-    fi
-
-    ${prefix} /usr/bin/expect<<EOMODULES
-spawn sudo -u ${NGINX_USER} php ${NGINX_SITE_FREESCOUT_WEBROOT%/}/artisan freescout:module-install --no-ansi
+    silent /usr/bin/expect<<EOMODULES
+spawn sudo -H -u ${NGINX_USER} php ${NGINX_SITE_FREESCOUT_WEBROOT%/}/artisan freescout:module-install --no-ansi
 set timeout 30
 expect \
 {
@@ -149,5 +181,4 @@ expect \
 #  timeout {puts "Putting you in control - to exit type \\ twice";interact \\\\}
 }
 EOMODULES
-    if var_true "${MODULE_DEBUG}"; then set +x ; fi
 }
